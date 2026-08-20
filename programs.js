@@ -7,7 +7,7 @@ window.PROGRAMS = [
     category: "복지·생활",
     icon: "🏥",
     tags: ["기초수급", "생계급여", "의료급여", "부양의무자", "소득인정액"],
-    price: "",
+    price: "무료",
     file: "tools/gichoss.html",
     updated: "2026-08"
   }
