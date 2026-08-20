@@ -44,6 +44,7 @@ const body = items.map(p =>
   `    icon: ${JSON.stringify(p.icon || '🧰')},\n` +
   `    tags: [${(p.tags || []).map(t => JSON.stringify(t)).join(', ')}],\n` +
   `    price: ${JSON.stringify(p.price || '')},\n` +
+  (p.download ? `    download: ${JSON.stringify(p.download)},\n` : '') +
   `    file: ${JSON.stringify(p.file)},\n` +
   `    updated: ${JSON.stringify(p.updated || '')}\n` +
   '  }'

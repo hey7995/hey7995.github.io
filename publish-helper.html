@@ -29,7 +29,7 @@
 <body>
 <div class="wrap">
   <h1>🚀 발행 도우미</h1>
-  <p class="lead">새 프로그램 정보를 한 번만 넣으면, ① 홈페이지 목록 등록용 코드 ② 프로그램 파일용 메타데이터 ③ 블로그 안내글 ④ 유튜브 제목·설명을 한꺼번에 만들어 드려요. 각 칸의 <b>복사</b>를 눌러 붙여넣기만 하면 됩니다.</p>
+  <p class="lead">새 프로그램 정보를 한 번만 넣으면, 목록 등록·메타데이터·블로그·유튜브 문구를 한꺼번에 만들어 드려요. <b>내 컴퓨터에서 <code>발행도우미.bat</code>로 열면</b>, 아래 <b>🚀 직접 발행</b>에서 파일만 골라 누르면 <b>업로드까지 자동</b>으로 됩니다. (그 외 환경에선 ①②③④ 코드를 복사해 사용)</p>
 
   <div class="card">
     <div class="grid">
@@ -44,6 +44,8 @@
     </div>
     <label>가격 배지 <span class="u">홈페이지 카드에 표시 · 예: 무료 / 무료 체험 후 유료</span></label>
     <input id="f_price" placeholder="무료" value="무료">
+    <label>다운로드 링크 <span class="u">설치형만 채우세요 · GitHub Releases의 .exe 주소 등 · 비우면 웹 도구</span></label>
+    <input id="f_download" placeholder="예: https://github.com/hey7995/hey7995.github.io/releases/download/v1/setup.exe">
     <div class="grid">
       <div><label>태그 <span class="u">쉼표로 구분</span></label><input id="f_tags" placeholder="기초수급, 의료급여"></div>
       <div><label>파일 경로 <span class="u">tools/…</span></label><input id="f_file" placeholder="tools/파일이름.html"></div>
@@ -51,6 +53,21 @@
     <div class="grid">
       <div><label>홈페이지 주소 <span class="u">선택 · 블로그 링크용</span></label><input id="f_site" placeholder="https://아이디.github.io"></div>
       <div><label>핵심 기능 3가지 <span class="u">선택 · 쉼표</span></label><input id="f_feat" placeholder="자동 계산, 근거 문서 출력, 저장/불러오기"></div>
+    </div>
+  </div>
+
+  <div class="card" id="pubCard" style="border-color:var(--brand)">
+    <h2>🚀 직접 발행 <span class="u" id="pubModeNote"></span></h2>
+    <p class="note">위 정보를 채운 뒤, 완성한 <b>프로그램 HTML 파일</b>을 골라 <b>발행</b>을 누르면 — <b>tools 폴더 저장 → 목록 등록 → GitHub 업로드</b>까지 자동으로 됩니다. (1~2분 뒤 <b>hey7995.github.io</b>에 반영)</p>
+    <div id="pubLocal">
+      <label>프로그램 HTML 파일 선택 <span class="u">완성한 .html</span></label>
+      <input type="file" id="pubFile" accept=".html,.htm">
+      <button class="copy" id="pubBtn" style="margin-top:12px;padding:11px 20px;font-size:14px">🚀 지금 발행하기</button>
+      <div class="out" id="pubOut" style="margin-top:10px;display:none"></div>
+      <p class="note">※ 설치형(.exe 등)은 용량 때문에 여기가 아니라 <b>GitHub Releases</b>에 올리고, 위 <b>다운로드 링크</b> 칸에 그 주소를 넣어 <b>안내 페이지(HTML)</b>를 발행하세요.</p>
+    </div>
+    <div id="pubRemote" style="display:none">
+      <p class="note">⚠ 자동 발행은 <b>내 컴퓨터에서 <code>발행도우미.bat</code>로 열었을 때만</b> 작동해요. 지금은 그 환경이 아니라, 아래 <b>①②③④ 코드를 복사</b>해 쓰는 방식으로 이용하세요.</p>
     </div>
   </div>
 
@@ -79,7 +96,7 @@
 </div>
 
 <script>
-  var ids=['f_name','f_icon','f_desc','f_cat','f_upd','f_tags','f_file','f_site','f_feat','f_price'];
+  var ids=['f_name','f_icon','f_desc','f_cat','f_upd','f_tags','f_file','f_site','f_feat','f_price','f_download'];
   function g(id){return (document.getElementById(id).value||'').trim();}
   function tagsArr(){return g('f_tags').split(',').map(function(s){return s.trim();}).filter(Boolean);}
   function featArr(){return g('f_feat').split(',').map(function(s){return s.trim();}).filter(Boolean);}
@@ -89,6 +106,8 @@
         upd=g('f_upd'), file=g('f_file'), site=g('f_site'), tags=tagsArr(), feat=featArr();
     var price=g('f_price')||'무료';
     var isPaid=/유료|체험/.test(price);   // '무료 체험 후 유료' 등은 완전 무료 문구를 쓰지 않음
+    var download=g('f_download');
+    var isInstall=!!download;             // 다운로드 링크가 있으면 설치형 프로그램
     var link = site ? (site.replace(/\/+$/,'') + '/' + (file? (file+'').replace(/^\/+/,'') : '')) : (file||'(홈페이지 주소를 넣으면 링크가 자동으로 채워져요)');
     // ① programs.js entry
     document.getElementById('o1').textContent =
@@ -99,6 +118,7 @@
       '    icon: '+q(icon)+',\n'+
       '    tags: ['+tags.map(q).join(', ')+'],\n'+
       '    price: '+q(price)+',\n'+
+      (download? '    download: '+q(download)+',\n' : '')+
       '    file: '+q(file)+',\n'+
       '    updated: '+q(upd)+'\n'+
       '  }';
@@ -111,32 +131,43 @@
       'icon: '+icon+'\n'+
       'tags: '+tags.join(',')+'\n'+
       'price: '+price+'\n'+
+      (download? 'download: '+download+'\n' : '')+
       'file: '+file+'\n'+
       'updated: '+upd+'\n'+
       'PROGRAM-->';
     // ③ blog draft
     var featLines = feat.length ? feat.map(function(f){return '· '+f;}).join('\n') : '· (핵심 기능을 적어주세요)';
-    var blogBenefit = isPaid
+    var blogBenefit = isInstall
+      ? '· 이용 안내 — '+price+'.\n'+
+        '· 컴퓨터에 내려받아 설치해서 쓰는 프로그램이에요.\n'
+      : isPaid
       ? '· 이용 안내 — '+price+'.\n'+
         '· 폰·컴퓨터 어디서나 — 링크만 누르면 바로 실행돼요.\n'
       : '· 완전 무료 — 설치도, 회원가입도 필요 없어요.\n'+
         '· 개인정보 안전 — 입력한 내용은 내 기기(브라우저)에서만 계산되고 서버로 전송되지 않습니다.\n'+
         '· 폰·컴퓨터 어디서나 — 링크만 누르면 바로 실행돼요.\n';
+    var blogUsage = isInstall
+      ? '1) 위 링크에서 설치파일을 내려받으세요.\n'+
+        '2) 내려받은 파일을 실행해 설치하세요.\n'+
+        '3) 설치된 프로그램을 열어 사용하세요.\n'
+      : '1) 위 링크를 누르세요.\n'+
+        '2) 화면 안내에 따라 내 상황을 넣으세요.\n'+
+        '3) 결과와 안내를 확인하세요. (필요하면 결과를 파일로 저장·출력할 수 있어요.)\n';
     document.getElementById('o3').textContent =
       '['+(name||'프로그램 이름')+'] '+(desc||'한 줄 소개')+'\n\n'+
       '안녕하세요. 오늘은 '+(name||'이 도구')+'를 소개합니다.\n'+
       (desc?desc+'\n':'')+'\n'+
-      '▶ 바로 사용하기\n'+link+'\n\n'+
+      '▶ '+(isInstall?'다운로드 · 설치 안내':'바로 사용하기')+'\n'+link+'\n\n'+
       '▶ 이런 점이 좋아요\n'+featLines+'\n'+blogBenefit+'\n'+
-      '▶ 사용법 (아주 간단해요)\n'+
-      '1) 위 링크를 누르세요.\n'+
-      '2) 화면 안내에 따라 내 상황을 넣으세요.\n'+
-      '3) 결과와 안내를 확인하세요. (필요하면 결과를 파일로 저장·출력할 수 있어요.)\n\n'+
+      '▶ 사용법 (아주 간단해요)\n'+blogUsage+'\n'+
       '▶ 꼭 알아두세요\n'+
       '이 프로그램의 이용조건은 '+price+'입니다. 자세한 유의사항은 프로그램 안내를 확인하세요. 진단성 도구의 결과는 참고용이며, 최종 판단·신청은 관할 기관에서 확정됩니다. 공식 기관이 운영하는 사이트가 아닙니다.\n\n'+
       '#'+(tags.length?tags.join(' #'):'생활프로그램')+(isPaid?'':' #무료')+' #생활정보';
     // ④ youtube
-    var ytBenefit = isPaid
+    var ytBenefit = isInstall
+      ? '· 이용 안내: '+price+'\n'+
+        '· 컴퓨터에 내려받아 설치해서 사용\n'
+      : isPaid
       ? '· 이용 안내: '+price+'\n'+
         '· 폰·PC 모두 링크만 열면 바로 사용\n'
       : '· 완전 무료, 설치·회원가입 없음\n'+
@@ -146,14 +177,14 @@
       '[제목]\n'+(name||'프로그램 이름')+' — '+(desc? desc.slice(0,40) : '직접 확인하는 방법')+(isPaid?'':' (무료)')+'\n\n'+
       '[설명]\n'+
       (desc||'')+'\n\n'+
-      '▶ 바로 사용하기: '+link+'\n\n'+
+      '▶ '+(isInstall?'다운로드':'바로 사용하기')+': '+link+'\n\n'+
       '이 영상은 '+(name||'이 도구')+'의 사용법을 안내합니다.\n'+
       ytBenefit+'\n'+
       '※ 진단성 도구의 결과는 참고용이며, 최종 판단·신청은 관할 기관에서 확정됩니다. 이용조건: '+price+'.\n\n'+
       '[해시태그]\n#'+(tags.length?tags.join(' #'):'생활프로그램')+(isPaid?'':' #무료')+' #사용법';
   }
   ids.forEach(function(id){document.getElementById(id).addEventListener('input',build);});
-  document.querySelectorAll('.copy').forEach(function(btn){
+  document.querySelectorAll('.copy[data-t]').forEach(function(btn){
     btn.addEventListener('click',function(){
       var el=document.getElementById(btn.getAttribute('data-t'));
       var r=document.createRange(); r.selectNodeContents(el);
@@ -162,6 +193,45 @@
       sel.removeAllRanges();
     });
   });
+
+  // ===== 🚀 직접 발행 (로컬 발행도우미.bat로 열었을 때만 실제 작동) =====
+  function pubMode(){
+    var local=/^(127\.0\.0\.1|localhost)$/.test(location.hostname);
+    document.getElementById('pubLocal').style.display=local?'':'none';
+    document.getElementById('pubRemote').style.display=local?'none':'';
+    document.getElementById('pubModeNote').textContent=local?'· 내 컴퓨터(자동 발행 가능)':'· 공개 페이지(코드 복사 방식)';
+  }
+  function pubSay(html,isErr){
+    var el=document.getElementById('pubOut'); el.style.display=''; el.innerHTML=html; el.style.color=isErr?'#b3341f':'';
+  }
+  async function doPublish(){
+    var f=document.getElementById('pubFile').files[0];
+    if(!f){ pubSay('먼저 프로그램 HTML 파일을 선택하세요.',true); return; }
+    if(!g('f_name')){ pubSay('위에서 <b>프로그램 이름</b>부터 채워주세요.',true); return; }
+    var content=await f.text();
+    content=content.replace(/<!--PROGRAM[\s\S]*?PROGRAM-->\s*/i,'');      // 기존 메타 제거
+    var meta=document.getElementById('o2').textContent.trim();           // ②에서 만든 최신 메타
+    if(/<!DOCTYPE html>/i.test(content)) content=content.replace(/<!DOCTYPE html>/i,'<!DOCTYPE html>\n'+meta);
+    else content=meta+'\n'+content;
+    var fname=((g('f_file')||'').split('/').pop() || f.name).replace(/[^A-Za-z0-9가-힣._-]/g,'').replace(/\.html?$/i,'')+'.html';
+    pubSay('발행 중… (저장 → 목록등록 → GitHub 업로드) 잠시만요.');
+    try{
+      var res=await fetch('_publish.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({filename:fname,content:content})});
+      var data=await res.json();
+      if(data.ok){
+        var base=(g('f_site')||'https://hey7995.github.io').replace(/\/+$/,'');
+        var url=base+'/'+data.file;
+        pubSay('✅ <b>발행 완료!</b> 1~2분 뒤 반영됩니다.<br>주소: <a href="'+url+'" target="_blank" rel="noopener">'+url+'</a>');
+      }else{
+        pubSay('❌ '+(data.error||'실패')+'<br><pre style="white-space:pre-wrap;font-size:11px">'+String(data.log||'').replace(/[<>]/g,'')+'</pre>',true);
+      }
+    }catch(e){
+      pubSay('❌ 로컬 발행 서버에 연결하지 못했어요. <b>발행도우미.bat</b>로 열었는지 확인하세요.',true);
+    }
+  }
+  document.getElementById('pubBtn').addEventListener('click',doPublish);
+  pubMode();
+
   build();
 </script>
 </body>

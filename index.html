@@ -35,6 +35,7 @@
   .btn{flex:1;text-align:center;text-decoration:none;font-weight:800;font-size:14px;border-radius:10px;padding:10px;background:var(--brand);color:#fff}
   .btn.dl{flex:0 0 auto;background:transparent;color:var(--brand);border:1px solid var(--brand);padding:10px 12px}
   .upd{font-size:11px;color:var(--muted);margin-top:8px}
+  .kind{font-size:11.5px;color:var(--accent);font-weight:700;margin-top:8px}
   .empty{color:var(--muted);font-size:14px;padding:30px 0;text-align:center}
   footer{margin-top:36px;border-top:1px solid var(--line);padding-top:16px;color:var(--muted);font-size:12.5px;line-height:1.8}
   footer b{color:var(--ink)}
@@ -72,17 +73,25 @@
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function card(p){
     var tags=(p.tags||[]).map(function(t){return '<i>'+esc(t)+'</i>';}).join('');
-    var dl=p.file?'<a class="btn dl" href="'+esc(p.file)+'" download title="파일 내려받기">⬇</a>':'';
     var price=p.price?'<span class="price '+(/유료|체험/.test(p.price)?'paid':'free')+'">'+esc(p.price)+'</span>':'';
+    var actions, kind='';
+    if(p.download){            // 설치형 — 내려받아 설치하는 프로그램
+      actions='<a class="btn" href="'+esc(p.download)+'" rel="noopener">⬇ 다운로드</a>'+
+              (p.file?'<a class="btn dl" href="'+esc(p.file)+'" rel="noopener" title="자세히 보기">자세히</a>':'');
+      kind='<div class="kind">💻 설치형 — 내려받아 컴퓨터에 설치해서 사용해요</div>';
+    } else if(p.file){         // 웹 도구 — 브라우저에서 바로 실행
+      actions='<a class="btn" href="'+esc(p.file)+'">열기 · 사용하기</a>'+
+              '<a class="btn dl" href="'+esc(p.file)+'" download title="파일 내려받기">⬇</a>';
+    } else {
+      actions='<span class="btn" style="background:var(--muted)">준비 중</span>';
+    }
     return '<div class="card">'+
       '<div class="chead"><div class="ico">'+esc(p.icon||'🧰')+'</div>'+price+'</div>'+
       '<h3>'+esc(p.name)+'</h3>'+
       '<p>'+esc(p.desc)+'</p>'+
       (tags?'<div class="tags">'+tags+'</div>':'')+
-      '<div class="row">'+
-        (p.file?'<a class="btn" href="'+esc(p.file)+'">열기 · 사용하기</a>':'<span class="btn" style="background:var(--muted)">준비 중</span>')+
-        dl+
-      '</div>'+
+      '<div class="row">'+actions+'</div>'+
+      kind+
       (p.updated?'<div class="upd">갱신 '+esc(p.updated)+'</div>':'')+
     '</div>';
   }
