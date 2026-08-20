@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<!--PROGRAM
+name: 기초생활수급 자가진단
+desc: 생계·의료·주거·교육급여를 받을 수 있는지 스스로 점검하고, 근거·계산 과정을 담은 '최종진단서'까지 출력하는 도구(2026년 기준).
+category: 복지·생활
+icon: 🏥
+tags: 기초수급,생계급여,의료급여,부양의무자,소득인정액
+file: tools/gichoss.html
+updated: 2026-08
+PROGRAM-->
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>기초생활수급 간편 자가진단 (2026)</title>
+<style>
+  :root{--bg:#eef1f5;--card:#fff;--ink:#18202c;--muted:#5c6675;--line:#e2e7ee;--brand:#2f6f5b;--brand2:#3d7dd8;--ok:#1f9d63;--okbg:#e8f6ef;--no:#c8452f;--nobg:#fbeae5;--warn:#b5820a;--warnbg:#fdf3df;--chip:#eef2f7;--shadow:0 1px 3px rgba(20,30,50,.06);}
+  @media (prefers-color-scheme:dark){:root{--bg:#0e1319;--card:#161d27;--ink:#e9edf3;--muted:#98a4b3;--line:#28313d;--okbg:#123021;--nobg:#331611;--warnbg:#2d2610;--chip:#1d2530;--shadow:0 1px 3px rgba(0,0,0,.3);}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic",sans-serif;line-height:1.6;-webkit-text-size-adjust:100%}
+  .wrap{max-width:880px;margin:0 auto;padding:22px 16px 80px}
+  header h1{font-size:23px;margin:0 0 6px;letter-spacing:-.3px}
+  .sub{color:var(--muted);font-size:13.5px;margin:0}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin:16px 0;box-shadow:var(--shadow)}
+  .card h2{font-size:16px;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+  .step{font-size:11px;font-weight:800;color:#fff;background:var(--brand);border-radius:999px;padding:3px 10px}.step.b{background:var(--brand2)}
+  .hint{color:var(--muted);font-size:12.5px;margin:3px 0 12px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px}
+  @media(max-width:560px){.grid{grid-template-columns:1fr}}
+  .fld{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;border-bottom:1px dashed var(--line)}
+  .fld label{font-size:13.5px}.fld .u{color:var(--muted);font-size:11.5px}
+  select,input[type=number]{font:inherit;font-size:14px;padding:7px 9px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);width:140px;text-align:right}
+  select{text-align:left;width:150px}
+  label.chk{display:flex;gap:9px;align-items:flex-start;padding:8px 0;border-bottom:1px dashed var(--line);font-size:13.5px}
+  label.chk:last-child{border-bottom:0}
+  input[type=checkbox]{width:18px;height:18px;margin-top:2px;accent-color:var(--brand);flex:0 0 auto}
+  .mini{background:var(--chip);border-radius:12px;padding:12px 14px;margin-top:12px;font-size:13px}
+  .mini .row{display:flex;justify-content:space-between;gap:10px;padding:3px 0;font-variant-numeric:tabular-nums}
+  .pill{font-size:11px;font-weight:800;border-radius:999px;padding:2px 9px}.pill.y{background:var(--okbg);color:var(--ok)}.pill.n{background:var(--nobg);color:var(--no)}
+  .res{border-radius:12px;padding:11px 13px;margin-top:10px;font-size:13px}
+  .res.ok{background:var(--okbg);border:1px solid var(--ok)}.res.no{background:var(--nobg);border:1px solid var(--no)}.res.warn{background:var(--warnbg);border:1px solid var(--warn)}
+  .calc{font-variant-numeric:tabular-nums;color:var(--muted);font-size:12px;margin-top:4px}
+  details{margin-top:6px;font-size:12.5px}details summary{cursor:pointer;color:var(--brand2);font-weight:700}
+  details .body{background:var(--chip);border-radius:10px;padding:10px 12px;margin-top:8px;color:var(--ink);line-height:1.65}
+  details .body b{color:var(--brand)}
+  .obcard{border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0;background:var(--bg)}
+  .obhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;font-size:13.5px}
+  .del{font:inherit;font-size:12px;color:var(--no);background:transparent;border:1px solid var(--no);border-radius:8px;padding:3px 9px;cursor:pointer}
+  .add{font:inherit;font-size:13.5px;font-weight:700;color:#fff;background:var(--brand2);border:0;border-radius:10px;padding:9px 14px;cursor:pointer;margin-top:6px}
+  .obres{margin-top:8px}
+  .final{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
+  @media(max-width:560px){.final{grid-template-columns:1fr}}
+  .fcard{border-radius:16px;padding:16px;border:2px solid var(--line);background:var(--card)}
+  .fcard.ok{border-color:var(--ok);background:var(--okbg)}.fcard.no{border-color:var(--no);background:var(--nobg)}.fcard.warn{border-color:var(--warn);background:var(--warnbg)}
+  .fcard h3{margin:0 0 4px;font-size:15px}.fcard .big{font-size:17px;font-weight:800;margin:4px 0}.fcard .why{font-size:12.5px;color:var(--muted);margin-top:6px}
+  .tag{display:inline-block;background:var(--chip);color:var(--muted);border-radius:6px;padding:1px 7px;font-size:11px;margin-left:4px}
+  .hidden{display:none}
+  .src{font-size:11.5px;color:var(--muted);border-top:1px solid var(--line);margin-top:22px;padding-top:12px;line-height:1.7}
+  b.k{color:var(--brand)}
+  input[readonly]{background:var(--chip);color:var(--muted);cursor:not-allowed;opacity:.85}
+  /* 신청용 문서 오버레이 */
+  #docOverlay{position:fixed;inset:0;z-index:9999;background:#fff;color:#111;overflow:auto;display:none}
+  #docOverlay .bar{position:sticky;top:0;background:#1f4f8f;color:#fff;padding:10px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  #docOverlay .bar button{border:0;border-radius:8px;padding:8px 14px;font-weight:800;cursor:pointer;font-size:13px}
+  #docOverlay .bar .pr{background:#fff;color:#1f4f8f}#docOverlay .bar .cl{background:transparent;color:#fff;border:1px solid #fff}
+  #docPaper{max-width:820px;margin:0 auto;padding:26px 30px 60px;font-size:13.5px;line-height:1.65;color:#111;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic",sans-serif}
+  #docPaper h1{font-size:21px;margin:0 0 2px}#docPaper h2{font-size:15.5px;margin:22px 0 8px;padding-bottom:5px;border-bottom:2px solid #1f4f8f;color:#1f4f8f}
+  #docPaper h3{font-size:13.5px;margin:14px 0 5px}
+  #docPaper table{width:100%;border-collapse:collapse;font-size:12.5px;margin:6px 0}
+  #docPaper th,#docPaper td{border:1px solid #ccc;padding:5px 8px;text-align:left;vertical-align:top}
+  #docPaper th{background:#eef2f8}#docPaper td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  #docPaper .cite{color:#1f4f8f;font-size:11.5px}#docPaper .muted{color:#666;font-size:12px}
+  #docPaper .ok{color:#1f7a4d;font-weight:800}#docPaper .no{color:#b3341f;font-weight:800}
+  #docPaper .box{background:#f5f7fb;border:1px solid #dbe3ef;border-radius:8px;padding:10px 12px;margin:8px 0}
+  #docPaper .sig{margin-top:26px;font-size:12.5px;color:#333}
+  @media print{
+    body>*{display:none !important}
+    #docOverlay{display:block !important;position:static;overflow:visible}
+    #docOverlay .bar{display:none !important}
+    @page{margin:14mm}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>기초생활수급 간편 자가진단 <span class="tag">2026</span></h1>
+  <p class="sub">몇 가지만 입력하면 <b>생계급여</b>와 <b>의료급여</b>를 받을 수 있을지 대략 알려드려요. 참고용이며, 정확한 결정은 주민센터(행정복지센터)·☎129에서 확인하세요.</p>
+</header>
+
+<div class="card">
+  <h2>ℹ️ 이 도구는?</h2>
+  <p class="hint" style="font-size:13px">소득·재산·가족 정보를 넣으면 <b>생계·의료·주거·교육급여</b>를 받을 수 있을지 대략 알려드려요. <b>참고용 예상치</b>이며, 최종 결정은 주민센터(행정복지센터)에서 공적자료로 합니다. ☎129</p>
+  <details><summary>처음이신가요? 사용법·개인정보 안내 ▾</summary><div class="body">
+    <b>3단계로 하세요</b><br>
+    ① <b>1번</b>에 우리 집(받을 분)의 소득·재산을 넣기 → ② 의료급여까지 보려면 <b>2번</b>에 따로 사는 부모·자녀를 추가 → ③ 아래 <b>결과 카드 4개</b>(생계·의료·주거·교육) 확인.<br><br>
+    · 기준을 넘으면 아래 <b>'💡 이렇게 하면 받을 수 있어요'</b>와 <b>'🔀 나눠 받기'</b>도 꼭 확인하세요.<br>
+    · <b>개인정보 안전:</b> 입력값은 <b>내 기기에서만</b> 계산되고 서버로 전송되지 않아요. 아래 '💾 저장'으로 파일·코드로 보관·복원할 수 있어요.<br>
+    · 소득·재산 계산이 헷갈리면 각 칸의 <b>'상세설명 ▾'</b>을 눌러보세요.<br>
+    · 근거: 보건복지부 「2026년 국민기초생활보장 사업안내」와 대조 검증됨(2026년 기준).
+  </div></details>
+</div>
+
+<div class="card">
+  <h2>💾 입력 저장 / 불러오기</h2>
+  <p class="hint">입력한 내용을 저장했다가 나중에 다시 불러올 수 있어요. <b>정보는 내 기기에만 저장되고 서버로 전송되지 않습니다.</b></p>
+  <button class="add" id="btnSave" type="button">저장(파일로 내려받기)</button>
+  <button class="add" id="btnLoadFile" type="button" style="background:var(--brand);margin-left:6px">파일 불러오기</button>
+  <input type="file" id="loadFile" accept=".json,application/json" style="display:none">
+  <span id="ioMsg" class="u" style="margin-left:8px"></span>
+  <div style="border-top:1px solid var(--line);margin-top:12px;padding-top:12px">
+    <p class="hint" style="margin-top:0"><b>기초생활수급 최종진단서</b> — 입력한 내용으로 <b>소득인정액·재산환산·급여판정·부양의무자·증여 자연적소비</b>의 계산 과정과 <b>원문 근거(쪽수)</b>를 정리한 문서를 만듭니다. 담당자와 상담·신청할 때 근거자료로 쓰세요.</p>
+    <button class="add" id="btnDoc" type="button" style="background:#1f4f8f;color:#fff;font-weight:800">📄 기초생활수급 최종진단서 출력</button>
+  </div>
+  <details style="margin-top:8px">
+    <summary>코드로 저장/불러오기 (파일 저장이 안 될 때만)</summary>
+    <div class="body">
+      <p class="u" style="margin-top:0">대부분은 필요 없어요. <b>위 '파일로 내려받기'가 막히는 환경</b>(폰 앱 미리보기, 일부 브라우저)에서만 쓰는 예비 방법이에요.</p>
+      <b>저장:</b> '저장' 버튼 후 아래 코드를 복사해 메모장 등에 보관하세요. <b>불러오기:</b> 보관한 코드를 아래에 붙여넣고 '붙여넣은 코드 불러오기'를 누르세요.
+      <textarea id="stateBox" style="width:100%;height:80px;margin-top:8px;font-size:12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);padding:8px" placeholder="여기에 저장 코드가 표시되거나, 저장해둔 코드를 붙여넣으세요"></textarea>
+      <button class="add" id="btnCopy" type="button">코드 복사</button>
+      <button class="add" id="btnLoadText" type="button" style="background:var(--brand);margin-left:6px">붙여넣은 코드 불러오기</button>
+    </div>
+  </details>
+</div>
+
+<!-- STEP 1 -->
+<div class="card">
+  <h2><span class="step">1</span> 급여를 받을 분(본인 또는 부모님 등)</h2>
+  <p class="hint">급여를 받으려는 <b>한 집(세대)</b>의 소득과 재산을 넣어주세요. 소득이 적고 재산이 적을수록 받을 가능성이 높아요. 모르면 대략 넣어도 됩니다.</p>
+  <div class="grid">
+    <div class="fld"><label>사는 지역</label><select id="rHome"><option value="seoul">서울</option><option value="gyeonggi">경기</option><option value="metro">광역시·세종·창원</option><option value="etc" selected>그 밖의 지역</option></select></div>
+    <div class="fld"><label>같이 사는 식구 수</label><select id="hSize"><option value="1">1명</option><option value="2" selected>2명</option><option value="3">3명</option><option value="4">4명</option><option value="5">5명</option><option value="6">6명</option><option value="7">7명</option></select></div>
+    <div class="fld"><label>한 달 소득 <span class="u">일·연금 등 모두 · 상세설명</span></label><div><input type="number" id="hInc" placeholder="0" min="0"> <span class="u">만원</span></div></div>
+    <div class="fld"><label>국민연금 보험료 <span class="u">월 납부액 · 75% 공제</span></label><div><input type="number" id="hPension" placeholder="0" min="0"> <span class="u">만원</span></div></div>
+    <div class="fld"><label>살고 있는 집 <span class="u">내 집일 때</span></label><div><input type="number" id="hHome" placeholder="0" min="0"> <span class="u">만원</span></div></div>
+    <div class="fld"><label>그 밖의 부동산·전월세보증금</label><div><input type="number" id="hGen" placeholder="0" min="0"> <span class="u">만원</span></div></div>
+    <div class="fld"><label>예금·적금·주식·보험 등</label><div><input type="number" id="hFin" placeholder="0" min="0"> <span class="u">만원</span></div></div>
+    <div class="fld"><label>갚아야 할 빚 <span class="u">은행 대출 등</span></label><div><input type="number" id="hDebt" placeholder="0" min="0"> <span class="u">만원</span></div></div>
+    <div class="fld"><label>처분·증여한 부동산·차 <span class="u">🔒 아래 계산기서 자동</span></label><div><input type="number" id="hGiftGen" placeholder="0" min="0" readonly> <span class="u">만원</span></div></div>
+    <div class="fld"><label>처분·증여한 예금 등 <span class="u">🔒 아래 계산기서 자동</span></label><div><input type="number" id="hGiftFin" placeholder="0" min="0" readonly> <span class="u">만원</span></div></div>
+  </div>
+  <p class="u" style="margin-top:2px">위 <b>처분·증여</b> 두 칸은 <b>아래 '🧮 처분·증여 남은 금액 계산기'에서 자동으로 채워집니다</b>(잠금). 처분·증여한 재산이 있으면 계산기에 <b>금액과 날짜</b>를 넣으세요.
+    <label class="chk" style="display:inline-flex;margin-top:4px;border:0;padding:2px 0"><input type="checkbox" id="giftManual"><span>직접 입력할래요 <span class="u">(고급 — 실수 주의)</span></span></label></p>
+  <div id="giftManualWarn" class="res warn hidden" style="margin-top:0;font-size:12.5px">⚠ 여기에는 처분·증여한 <b>원래 금액이 아니라</b>, 자연적 소비로 <b>줄어든 뒤 남은 금액</b>을 넣어야 합니다. 잘 모르면 체크를 풀고 <b>아래 계산기</b>를 이용하세요. 원래 금액을 그대로 넣으면 재산이 과도하게 계산돼 <b>탈락</b>할 수 있어요.</div>
+
+  <details>
+    <summary>상세설명 ▾ 연금은 어떻게 넣나요? (기초연금·국민연금)</summary>
+    <div class="body">
+      <b>받는 연금은 '한 달 소득'에 포함하세요.</b><br>
+      · <b>노인기초연금</b>: 공적이전소득이라 <b>생계·의료급여에서는 소득으로 잡혀요</b>. 소득 칸에 넣으세요. (예외: 장애인연금 받다 65세에 기초연금으로 전환된 경우의 기초연금액은 <b>주거·교육급여에서만</b> 제외) <span class="u">(p.121·148)</span><br>
+      · <b>국민연금 급여(노령·유족연금 등 받는 것)</b>: 이것도 공적이전소득이라 <b>소득에 넣습니다</b>(공제 대상 아님). <span class="u">(p.133)</span><br><br>
+      <b>내는 국민연금 보험료는 빼줍니다.</b> 국민연금에 가입해 <b>보험료를 내고 있으면</b>, 고지서상 <b>본인부담 보험료의 75%</b>를 소득에서 공제해요. 위 '국민연금 보험료' 칸에 <b>월 납부액</b>을 넣으면 자동으로 75%만큼 소득에서 빼서 계산합니다. <span class="u">(단, 체납·납부유예면 공제 안 되고 오히려 생계급여에서 차감될 수 있어요. p.133)</span>
+    </div>
+  </details>
+  <details>
+    <summary>상세설명 ▾ 자동차는 어떻게 넣나요?</summary>
+    <div class="body">
+      승용차는 원칙적으로 <b>값 전액이 소득처럼 계산</b>돼(월 100% 환산) 불리합니다. 다만 아래 차는 부동산처럼 낮게 계산되거나 아예 빠지므로, 재산 칸에 안 넣거나 '그 밖의 부동산·차' 칸에 넣으세요. <b>낮게 계산/제외되는 차:</b> 장애인용 차, 생계 수단(화물·농사)용 차, 오래됐거나(10년 이상) 값이 500만원 미만인 작은 차, 다자녀 7인승 등. <b>전액 계산되는 차:</b> 그 밖의 일반 승용차(배기량 2,000cc 이상이거나 새 차 등). 헷갈리면 담당자에게 물어보세요. <span class="u">(근거: 2026 사업안내 p.149~155)</span>
+    </div>
+  </details>
+
+  <details>
+    <summary>상세설명 ▾ "처분·증여한 재산"은 왜 넣나요?</summary>
+    <div class="body">
+      <b>재산을 팔거나 남에게 준(증여)</b> 경우, 그 돈은 없어진 게 아니라 <b>여전히 내 재산처럼 계산</b>됩니다(숨긴 재산 방지). 처분·증여 시점과 관계없이 대상이며, <b>2021.6.30 이전에 처분했고 5년이 지난 것만 제외</b>됩니다(p.156). 다만 그 돈을 ⑴ 다른 재산을 사는 데 썼거나, ⑵ 병원비·장례비·혼례비·학비 등에 실제로 썼거나, ⑶ 인정되는 빚(마이너스 통장·카드론 상환 포함)을 갚는 데 썼으면 그만큼은 빼줍니다. 그 <b>빼고 남은 금액만</b> 여기 넣으세요. 판 게 부동산·차면 위 칸, 예금이면 아래 칸. <span class="u">(근거: p.156~158)</span><br><br>
+      <b>마이너스 통장으로 재산 줄이기?</b> 예금으로 마이너스 통장을 갚은 돈은 '인정되는 사용'으로 봐서 되계산되지 않습니다(즉 예금이 실제로 줄어든 걸로 봄, p.158). 이때는 <b>줄어든 예금만</b> 위 '예금' 칸에 넣고 이 칸은 비우세요. 단 통장 거래로 소명해야 하고, 일부러 재산 줄이려 한 것으로 보이면 인정 안 될 수 있어요.
+    </div>
+  </details>
+
+  <details>
+    <summary>🧮 처분·증여 남은 금액 계산기</summary>
+    <div class="body">
+      처분·증여한 재산(사용처 확인 안 된 금액)은 <b>그날이 속한 달부터 매달 일정액씩 자동으로 줄어들어</b> 결국 0이 됩니다(자연적 소비금액, p.156~158). <b>기준 중위소득은 해마다 오르므로</b> 그 해 기준으로 연도별로 나눠 계산하고, <b>증여·처분한 날짜</b>를 넣으면 경과 기간과 <b>2021.6.30 기준일</b>도 자동으로 반영돼요. 여러 건이면 <b>각각 추가</b>하세요.
+      <div class="grid" style="margin-top:8px">
+        <div class="fld"><label>누구 재산인가요? <span class="u">차감율이 달라요</span></label><select id="giftWho"><option value="self">신청 본인 가구 (중위 50%)</option><option value="ob">의료급여 부양의무자 가구 (중위 100%)</option></select></div>
+        <div class="fld"><label>그 가구 식구 수 <span class="u">차감 기준</span></label><select id="giftSize"><option value="1">1명</option><option value="2">2명</option><option value="3">3명</option><option value="4">4명</option><option value="5">5명</option><option value="6">6명</option><option value="7">7명 이상</option></select></div>
+      </div>
+      <div id="giftList" style="margin-top:8px"></div>
+      <button class="add" id="giftAdd" type="button" style="margin-top:6px">＋ 증여·처분 건 추가</button>
+      <details style="margin-top:8px">
+        <summary class="u">가구원수가 중간에 바뀌었나요? (선택 — 차감액이 달라져요)</summary>
+        <div style="padding-top:6px">
+          <p class="u">기본은 위 '그 가구 식구 수'예요. 인원이 바뀐 <b>시점(월)</b>과 <b>바뀐 인원</b>을 추가하면, 그 달부터 그 인원 기준으로 매월 차감합니다. 여러 번 바뀌었으면 각각 추가하세요.</p>
+          <div id="giftSegList"></div>
+          <button class="add" id="giftSegAdd" type="button">＋ 가구원수 변동 추가</button>
+        </div>
+      </details>
+      <button class="add" id="giftCalc" type="button" style="background:#2f6f5b;color:#fff;margin-top:8px;font-weight:800">🧮 계산하기</button>
+      <div class="mini" id="giftOut" style="margin-top:8px"></div>
+      <p class="u" style="margin-top:6px">계산한 <b>남은 금액</b>은 위 '처분·증여한 부동산·차 / 예금 등' 칸에 <b>자동으로 채워집니다</b>. 매달 줄어드는 금액 = 그 해 식구 수 기준중위소득의 <b>50%(본인 가구)</b> 또는 <b>100%(의료급여 부양의무자 가구)</b>. 처분·증여일이 속한 달부터 <b>오늘</b>까지 셉니다. <b>2021.6.30 이전</b>에 처분·증여했고 <b>5년이 지난</b> 건은 재산에서 <b>제외</b>됩니다. (예금은 인출·이체일 기준)</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>상세설명 ▾ 한 달 소득 계산이 헷갈리면 (근로소득 공제 계산기)</summary>
+    <div class="body">
+      일해서 버는 소득은 전부가 아니라 <b>일부를 빼고(공제)</b> 계산합니다. 아래에 넣어 계산한 값을 위 '한 달 소득' 칸에 넣으세요.
+      <div class="grid" style="margin-top:8px">
+        <div class="fld"><label>일해서 버는 한 달 소득</label><div><input id="spaWork" type="number" placeholder="0" min="0"> <span class="u">만원</span></div></div>
+        <div class="fld"><label>버는 분의 상황</label><select id="spaType">
+          <option value="g30">보통 (30% 빼줌)</option>
+          <option value="d20_30">65세↑ 어르신·등록장애인·북한이탈·35세↑ 학생 (20만+30%)</option>
+          <option value="y60_30">34세 이하·대학생 (60만+30%)</option>
+          <option value="p30">임신·출산6개월내·사회복무·상근예비역·행정인턴 (30%)</option>
+          <option value="r20_50">장애인·정신질환 직업재활 참여소득 (20만+50%)</option>
+        </select></div>
+        <div class="fld"><label>그 밖의 소득 <span class="u">임대·연금 등(안 빼줌)</span></label><div><input id="spaOther" type="number" placeholder="0" min="0"> <span class="u">만원</span></div></div>
+        <div class="fld"><label>빼주는 지출 <span class="u">장애·의료·양육비 등</span></label><div><input id="spaDed" type="number" placeholder="0" min="0"> <span class="u">만원</span></div></div>
+      </div>
+      <div class="mini" id="spaOut" style="margin-top:8px"></div>
+      <button class="add" id="spaFill" type="button" style="background:var(--brand);margin-top:8px">▲ 계산값을 위 '한 달 소득'에 넣기</button>
+      <p class="u" style="margin-top:6px">여러 상황에 해당하면 가장 유리한 하나만 적용돼요. (근거: p.105~106) 의료급여의 소득 계산은 조금 다르니 담당자 확인.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>상세설명 ▾ 소득에 '안 잡히는' 것 — '한 달 소득'에 넣지 마세요</summary>
+    <div class="body">
+      아래는 소득으로 계산하지 않아요(p.101~104). '한 달 소득'에 <b>넣지 마세요</b>:<br>
+      · <b>아동수당·부모급여·양육수당</b>(가정양육), 아동보육료·유치원비<br>
+      · <b>장애수당·장애아동수당·장애인연금</b><br>
+      · <b>근로장려금·자녀장려금</b>(→ 소득 아님, 재산으로 봄)<br>
+      · 장학금(생계형 제외), 한부모 아동양육비·청소년 한부모 자립수당<br>
+      · 지자체가 주는 교복비·난방비 등 급여 부가서비스, 이·통장 기본수당(월 40만원 이내)<br>
+      · 퇴직금·현상금·보상금 등 <b>한 번에 받는 돈</b>(→ 재산으로 봄)<br><br>
+      <b>※ 기초연금은 (생계·의료급여에서는) 소득에 잡혀요 — 빼지 말고 넣으세요.</b> 헷갈리면 담당자 확인.
+    </div>
+  </details>
+
+  <label class="chk" style="border-top:1px solid var(--line);margin-top:6px"><input type="checkbox" id="incapable"><span>우리 집은 <b>일할 수 있는 사람이 없어요</b> (65세 이상 어르신·중증장애·중증질환 등만 있음)</span></label>
+  <label class="chk"><input type="checkbox" id="disposalHard"><span>재산을 <b>처분하기 곤란한 사정</b>이 있어요 (가압류·경매·개발제한구역, 소유자가 정신질환·실종 등)</span></label>
+  <div class="fld" style="border-bottom:0;padding-top:6px"><label>일반 승용차 값 <span class="u">100% 환산 대상만 · 위 '자동차' 상세설명</span></label><div><input type="number" id="hCar" placeholder="0" min="0"> <span class="u">만원</span></div></div>
+  <details>
+    <summary>상세설명 ▾ 위 두 칸은 뭔가요? (재산이 소득으로 안 잡히는 경우 — 재산범위 특례)</summary>
+    <div class="body">
+      아래 두 경우에 해당하고 <b>재산이 한도 이하</b>이면, 그 재산을 <b>소득으로 계산하지 않습니다(소득환산 제외)</b>. 생계·의료·주거·교육급여에 모두 적용되고, 부양의무자에게는 적용되지 않아요. <span class="u">(근거: p.167~169)</span><br><br>
+
+      <b>① 일할 수 있는 사람이 없는 집</b> — 온 식구가 65세 이상 어르신·중증장애·중증질환 등 <b>근로무능력자만</b>으로 구성된 경우.<br><br>
+
+      <b>② 재산을 처분하기 곤란한 사정</b> — 재산이 있어도 팔거나 권리행사를 하기 어려운 다음 경우예요:<br>
+      · <b>가압류·경매</b> 등으로 사실상 재산권 행사가 어려운 경우<br>
+      · 소유자가 <b>정신질환자·가출·행방불명·실종·소년소녀가정 아동</b> 등이라 처분이 곤란한 경우<br>
+      · <b>개발제한구역</b>에 있는 등 거래가 거의 없어 팔려고 해도 처분이 곤란한 경우<br><br>
+
+      <b>공통 한도(①②동일)</b>: 빚을 뺀 <b>순재산</b>이 <b>그 밖의 지역 9,100만원</b>(서울 1억4,300만·경기 1억2,500만·광역/세종/창원 1억2,000만) 이하 <b>＋</b> <b>예금 등 금융재산이 그 밖의 지역 3,400만원</b>(그 외 지역 5,400만원) 이하 <b>＋</b> <b>값이 전액(100%) 계산되는 차가 없을 것</b>. (금융재산 한도는 빚·생활준비금을 빼지 않은 금액으로 봅니다.)<br><br>
+
+      <b>주의</b>: 순재산이 위 한도(9,100만/1억2,000만/1억2,500만/1억4,300만)를 <b>넘으면 특례가 적용되지 않고</b>, 일반가구처럼 <b>기본재산액</b>(서울 9,900만·경기 8,000만·광역/세종/창원 7,700만·그 외 5,300만)만 빼고 소득환산합니다. 위 체크칸을 켜면 도구가 한도 충족 여부를 자동 판정해 <b>[특례]</b> 또는 <b>[일반]</b>으로 표시해요. ①②는 담당자(보장기관장) 확인만으로 적용되고, 그 밖의 딱한 사정은 지방생활보장위원회 심의로 별도 인정될 수 있습니다.
+    </div>
+  </details>
+
+  <div class="mini" id="m1"></div>
+</div>
+
+<!-- STEP 2 -->
+<div class="card">
+  <h2><span class="step b">2</span> 따로 사는 가까운 가족 (부모·자녀)</h2>
+  <p class="hint"><b>의료급여</b>는 따로 사는 <b>부모·자녀(그 배우자 포함)</b>의 형편도 봅니다. 이들이 <b>모두 도와줄 형편이 안 되어야</b> 받을 수 있어요(한 명이라도 형편이 되면 못 받을 수 있음). <b>생계급여는 이 부분과 거의 상관없어요.</b> 형제·자매는 해당 없음.</p>
+  <label class="chk"><input type="checkbox" id="vuln"><span>급여 받을 분이 <b>어르신(65세↑)·장애인·한부모·희귀/중증질환</b>이에요 <span class="u">(기준이 완화돼요)</span></span></label>
+  <label class="chk"><input type="checkbox" id="suupSevere"><span>급여 받을 집에 <b>중증장애인</b>이 있어요 <span class="u">(가족 형편을 안 봐도 됨. 단 아주 잘사는 가족은 예외)</span></span></label>
+  <details>
+    <summary>상세설명 ▾ 가족 때문에 안 될 때 — 나눠서 받는 방법</summary>
+    <div class="body">
+      집 전체 소득은 기준 이하인데 <b>같이 사는 가족의 부모·자녀 형편 때문에</b> 못 받는 경우, 형편을 따질 필요 없는 가족만 <b>따로 떼어 받게</b> 할 수 있어요. 대표적으로 <b>(외)할머니·할아버지와 사는 18세 미만 손주</b>(중·고생 20세 이하, 대학생 34세 이하)는, 조부모 형편 때문에 온 가족이 탈락해도 손주만 따로 받을 수 있습니다(조부모 중 한 분이 어르신·장애·중증질환이거나 손주가 중증장애 등일 때). 상황이 복잡하니 담당자와 꼭 상담하세요. <span class="u">(근거: p.42~49)</span>
+    </div>
+  </details>
+  <div id="obList"></div>
+  <button class="add" id="addOb" type="button">＋ 부모·자녀 추가</button>
+  <div class="res" id="res2"></div>
+</div>
+
+<!-- FINAL -->
+<div class="final">
+  <div class="fcard" id="fSaeng"><h3>🍚 생계급여</h3><div class="big" id="fSaengB">—</div><div class="why" id="fSaengW"></div></div>
+  <div class="fcard" id="fUiryo"><h3>🏥 의료급여</h3><div class="big" id="fUiryoB">—</div><div class="why" id="fUiryoW"></div></div>
+  <div class="fcard" id="fJugeo"><h3>🏠 주거급여</h3><div class="big" id="fJugeoB">—</div><div class="why" id="fJugeoW"></div></div>
+  <div class="fcard" id="fEdu"><h3>📚 교육급여</h3><div class="big" id="fEduB">—</div><div class="why" id="fEduW"></div></div>
+</div>
+
+<div class="card" id="projCard" style="display:none">
+  <h2>⏳ 예상 통과 시점 <span class="u" style="font-weight:400">— 증여재산이 매달 줄어드는 걸 반영한 추정</span></h2>
+  <div class="mini" id="projOut"></div>
+  <p class="u" style="margin-top:8px">증여·처분재산은 매달 자연적 소비금액만큼 줄어들어, 그만큼 소득인정액도 내려갑니다. 아래는 <b>다른 소득·재산은 지금 그대로</b>라고 볼 때, 증여재산 감소만으로 기준을 넘는 시점을 추정한 값이에요. 미래 연도 기준중위소득은 아직 안 나와 <b>2026년 값으로 고정</b>해 추정했는데, 실제로는 중위소득이 올라 차감이 조금 더 빨라져 <b>예상보다 이를 수 있어요</b>. 의료급여는 부양의무자 요건도 따로 충족해야 하며, 최종 판정은 담당자 조사로 확정됩니다.</p>
+</div>
+
+<div class="card" id="solveCard" style="display:none">
+  <h2>💡 이렇게 하면 받을 수 있어요 — 조정 방법</h2>
+  <p class="hint">아래는 <b>규정이 인정하는 방법</b>과 <b>적용될 수 있는 경우(요건)</b>예요. ① 먼저 <b>빠뜨린 빚·공제·특례</b>를 챙겨 제대로 평가받기 → ② 그래도 부족하면 <b>재산을 실제로 줄이는</b> 방법 → ③ <b>부양의무자 관련 적용 가능한 경우</b> 확인. 각 방법은 요건에 해당하고 <b>사실관계가 확인(소명)될 때</b> 적용됩니다.</p>
+  <div id="solve"></div>
+  <details><summary>상세설명 ▾ 재산·소득 줄이는 방법 — 그대로 따라하기</summary><div class="body">
+    <b>■ 방법 1. 인정되는 데 '실제로 써서' 줄이기</b><br>
+    아무 데나 쓴 돈은 다시 재산으로 잡힐 수 있어요. <b>아래 용도로 쓴 것만</b> 재산에서 빠집니다(p.158).<br>
+    · 인정되는 지출: 병원 진료비·약값(한약 포함), 장애인 재활보조기구·노인장기요양 복지용구, 장례비, 혼례비, 학원비·등록금·학습지비.<br>
+    · 꼭 챙길 증빙: <b>진료비·약제비 납입확인서＋납입영수증</b>, 장례식장·혼례식장 영수증(장소사용·식대), 학원비·등록금 영수증. <b>※ 간이영수증(간이세금계산서)은 인정 안 됨</b> — 정식 영수증/납입확인서로 받으세요.<br>
+    · 하는 법: 위 용도로 지출 → 영수증 보관 → 신청·조사 때 제출.<br><br>
+
+    <b>■ 방법 2. 예금으로 '빚을 갚아서' 줄이기</b><br>
+    예금으로 아래 빚을 갚으면 그만큼 재산이 줄어든 것으로 봅니다.<br>
+    · <b>바로 재산에서 빠지는 빚:</b> 은행·저축은행 등 금융회사 대출(담보·신용대출), 공공기관·서민금융진흥원·공제회 대출, 법원 판결로 확인된 사채(p.160~161).<br>
+    · <b>마이너스 통장·카드론(1년 이내):</b> 이 빚 자체는 재산에서 안 빼주지만, <b>예금으로 이걸 갚은 금액</b>은 '타 재산 증가분'으로 인정되어 재산이 줄어든 걸로 봅니다(p.158). 하는 법: 예금으로 마이너스 통장/카드론 잔액 상환 → 통장에 대출·상환 내역이 남음 → 금융조회로 확인·소명.<br>
+    · <b>인정 안 되는 것:</b> 법원에서 확인 안 된 <b>개인 간 사채(빌린 돈)</b> 상환.<br>
+    · 준비 서류: 통장 거래내역, 대출확인서·상환확인서.<br>
+    · <b>주의:</b> ⑴ 재산 줄이려 <b>일부러</b> 얻은 빚·과도한 빚으로 보이면 인정 안 될 수 있어요(사유 입증 요구 가능, p.164). ⑵ 예금은 <b>최근 3개월 평균잔액</b>으로 조사돼(p.144) 갚은 직후 바로 반영되지 않으니 시점에 여유를 두세요.<br><br>
+
+    <b>■ 방법 3. 이미 있는 빚을 '재산에서 빼달라'고 하기 (안 줄여도 됨)</b><br>
+    지금 갚고 있는 은행 대출 등은 신청 때 <b>부채증명서</b>를 내면 재산에서 그만큼 빼줍니다. 전세보증금·담보대출도 실제 대출금 기준으로 차감돼요.<br><br>
+
+    <b>■ 방법 4. 소득에서 빼주는 것 챙기기</b><br>
+    · 일해서 버는 소득은 보통 <b>30% 빼줌</b>(어르신·등록장애인·34세 이하 등은 더 — 위 '근로소득 공제 계산기' 참고).<br>
+    · 장애·질병(3개월 이상 계속 쓰는 의료비)·양육 관련 지출 등도 소득에서 빼줍니다. 담당자에게 "이 항목 반영해 달라"고 요청하세요.<br><br>
+
+    <b>■ 자동으로 줄어드는 것</b><br>
+    과거에 처분·줄인 재산은 <b>매달 일정액(가구원수 기준중위소득의 50%)</b>씩 자동 소진 처리돼 시간이 지나면 저절로 줄어듭니다.<br><br>
+
+    <b>■ 부양의무자(의료급여)가 걸릴 때</b><br>
+    · 결혼한 딸·사위: 예금만 봐요 → 예금을 2억 500만원 미만으로(방법 1·2와 동일, p.204).<br>
+    · 실제로 도움을 못 받는 경우 — 부양 거부·기피, 가족관계 해체(단절), 해외 1년 이상 체류, 그 가족의 파산·신용불량 등이면 보장 가능(사실관계 소명 시, p.206~208).<br>
+    · 급여 받을 집에 중증장애인, 또는 그 가족 집에 기초연금 어르신·중증장애인이 있으면 가족 형편을 안 봐도 됩니다(p.209).<br>
+    · (외)조부모와 사는 18세 미만 손주 등은 '나눠 받기(별도가구)'로 손주만 받을 수 있어요(p.42).
+  </div></details>
+</div>
+
+<div class="card">
+  <h2>🔀 나눠 받기(별도가구) 계산</h2>
+  <p class="hint">온 가족으로는 기준을 넘어도, <b>일부 식구만 따로 떼면</b> 기준 이하가 되어 그 식구만 받을 수 있는 경우가 있어요(가정해체 방지 별도가구, p.42~49). 대표적으로 (외)조부모와 사는 <b>18세 미만 손주</b>(중·고생 20세 이하·대학생 34세 이하), 또는 분리하면 기준을 충족하는 식구. 아래에 <b>그 식구들의 몫</b>만 넣어 확인하세요.</p>
+  <details><summary>여기서 계산해보기 ▾</summary><div class="body">
+    <div class="grid">
+      <div class="fld"><label>사는 지역</label><select id="sepR"><option value="seoul">서울</option><option value="gyeonggi">경기</option><option value="metro">광역시·세종·창원</option><option value="etc" selected>그 밖의 지역</option></select></div>
+      <div class="fld"><label>따로 받을 식구 수</label><select id="sepSize"><option value="1" selected>1명</option><option value="2">2명</option><option value="3">3명</option><option value="4">4명</option><option value="5">5명</option><option value="6">6명</option><option value="7">7명</option></select></div>
+      <div class="fld"><label>그 식구들 한 달 소득</label><div><input id="sepInc" type="number" placeholder="0" min="0"> <span class="u">만원</span></div></div>
+      <div class="fld"><label>그 식구 몫 살고 있는 집</label><div><input id="sepHome" type="number" placeholder="0" min="0"> <span class="u">만원</span></div></div>
+      <div class="fld"><label>그 식구 몫 그 밖의 부동산·보증금</label><div><input id="sepGen" type="number" placeholder="0" min="0"> <span class="u">만원</span></div></div>
+      <div class="fld"><label>그 식구 몫 예금 등</label><div><input id="sepFin" type="number" placeholder="0" min="0"> <span class="u">만원</span></div></div>
+      <div class="fld"><label>그 식구 몫 빚</label><div><input id="sepDebt" type="number" placeholder="0" min="0"> <span class="u">만원</span></div></div>
+    </div>
+    <div class="mini" id="sepOut"></div>
+    <p class="u" style="margin-top:6px">※ 소득·재산은 <b>따로 받을 그 식구들 몫만</b> 넣으세요(누구 명의·누구 소득인지 기준). 별도가구에는 재산범위 특례·부양의무자 재산기준 특례가 <b>중복 적용되지 않습니다.</b> 의료급여는 그 식구의 부양의무자 유무를 위 2번에서 따로 확인하세요. 실제 인정은 요건 충족 시 <b>담당자 심사</b>로 결정됩니다.</p>
+  </div></details>
+</div>
+
+<div class="card">
+  <h2>🏠 주거급여 예상 월 지원액 (임차가구)</h2>
+  <p class="hint">주거급여를 받을 수 있을 때, 세입자(임차)면 대략 얼마 나오는지 계산해요. <b>주거급여 산정은 국토부 소관</b>이라 정확한 액수는 LH(☎1600-0777)·복지로에서 확인하세요.</p>
+  <details><summary>계산해보기 ▾</summary><div class="body">
+    <div class="grid">
+      <div class="fld"><label>급지</label><select id="rentJi"><option value="0">1급지(서울)</option><option value="1">2급지(경기·인천)</option><option value="2">3급지(광역시·세종·수도권외 특례시)</option><option value="3" selected>4급지(그 밖의 지역)</option></select></div>
+      <div class="fld"><label>실제 월세 <span class="u">모르면 비워도 됨</span></label><div><input id="rentReal" type="number" placeholder="0" min="0"> <span class="u">만원</span></div></div>
+    </div>
+    <div class="mini" id="rentOut"></div>
+    <p class="u" style="margin-top:6px">지급액 ≈ min(기준임대료, 실제월세) − 자기부담분. 자기부담분 = (소득인정액 − 생계급여 기준) × 30%. <b>기준임대료는 원문(p.193, 2026) 검증값</b>이고, 자기부담·산정방식은 국토부 기준입니다. 자가가구는 수선유지비로 다르게 산정돼요.</p>
+  </div></details>
+</div>
+
+<div class="src">
+  이 도구는 <b>대략적인 참고용</b>이에요. 실제 결정은 주민센터·시군구에서 서류와 금융조회로 하며, 최종 확인은 <b>주민센터(행정복지센터)·☎129</b>에서 하세요.<br>
+  담지 못한 것: 주거급여의 실제 지급액(기준임대료)·교육급여 지원항목 세부, 어떤 승용차가 100% 대상인지 자동 판정(값은 넣으면 계산, 종류는 '자동차' 상세설명), 나눠 받기(별도가구) 자동계산, 임차보증금 보정계수 등. (의료급여 부양비는 2026년 없어졌어요.)<br>
+  <span class="u">근거: 보건복지부 「2026년 국민기초생활보장 사업안내」. 판정 공식은 문서 판정기준표(p.212~216)와 대조 검증함.</span>
+</div>
+</div>
+
+<div id="docOverlay">
+  <div class="bar">
+    <button class="pr" id="docPrint" type="button">🖨 인쇄 / PDF로 저장</button>
+    <button class="cl" id="docClose" type="button">닫기</button>
+    <span style="font-size:12px;opacity:.9">인쇄 창에서 '대상'을 <b>PDF로 저장</b>으로 고르면 파일로 보관됩니다.</span>
+  </div>
+  <div id="docPaper"></div>
+</div>
+
+<script>
+// ============================================================
+//  ★ 매년 갱신 필요 ★  아래 '연도별 기준값'만 새해 값으로 바꾸면 됩니다.
+//  대상: YEAR, MEDIAN(기준 중위소득), SAENG32/UIRYO40/JUGEO48/EDU50(급여기준),
+//        BASIC_SUUP·HOME_LIMIT·BASIC_OB(재산 공제), RENT(주거급여 기준임대료).
+//  기준 중위소득은 매년 중앙생활보장위원회가 정해 전년도 8월경 발표됩니다.
+// ============================================================
+const YEAR='2026';
+const MEDIAN={1:2564238,2:4199292,3:5359036,4:6494738,5:7556719,6:8555952,7:9515150};
+// 연도별 기준 중위소득 — 과거 증여·처분재산의 '자연적 소비금액'을 그 해 기준으로 매달 차감.
+// 출처: 보건복지부 각 연도 기준 중위소득 고시 (2023~2026 공식자료 대조 완료)
+const MEDIAN_HIST={
+  2021:{1:1827831,2:3088079,3:3983950,4:4876290,5:5757373,6:6628603,7:7497198},
+  2022:{1:1944812,2:3260085,3:4194701,4:5121080,5:6024515,6:6907004,7:7780592},
+  2023:{1:2077892,2:3456155,3:4434816,4:5400964,5:6330688,6:7227981,7:8107515},
+  2024:{1:2228445,2:3682609,3:4714657,4:5729913,5:6695735,6:7618369,7:8514994},
+  2025:{1:2392013,2:3932658,3:5025353,4:6097773,5:7108192,6:8064805,7:8988428},
+  2026:{1:2564238,2:4199292,3:5359036,4:6494738,5:7556719,6:8555952,7:9515150}
+};
+const SAENG32={1:820556,2:1343773,3:1714892,4:2078316,5:2418150,6:2737905,7:3044848};
+const UIRYO40={1:1025695,2:1679717,3:2143614,4:2597895,5:3022688,6:3422381,7:3806060};
+const JUGEO48={1:1230834,2:2015660,3:2572337,4:3117474,5:3627225,6:4106857,7:4567272};
+const EDU50={1:1282119,2:2099646,3:2679518,4:3247369,5:3778360,6:4277976,7:4757575};
+const BASIC_SUUP={seoul:9900,gyeonggi:8000,metro:7700,etc:5300};
+const HOME_LIMIT={seoul:17200,gyeonggi:15100,metro:14600,etc:11200};
+const BASIC_OB={seoul:36400,gyeonggi:29400,metro:28300,etc:19500};
+const SPECIAL_BASE={seoul:14300,gyeonggi:12500,metro:12000,etc:9100};
+const SPECIAL_FIN={seoul:5400,gyeonggi:5400,metro:5400,etc:3400};
+const RESERVE=500*10000;
+// 2026 주거급여 기준임대료(원/월) [가구원수][급지 1~4] — 원문 p.193 검증값
+const RENT={1:[369000,300000,247000,212000],2:[414000,335000,275000,238000],3:[492000,401000,327000,283000],4:[571000,463000,381000,329000],5:[591000,479000,394000,340000],6:[699000,568000,463000,402000],7:[699000,568000,463000,402000]};
+let curSo=0,curSize='2';
+const won=n=>Math.round(n).toLocaleString('ko-KR');
+const $=id=>document.getElementById(id);
+const val=id=>(parseFloat($(id).value)||0)*10000;
+const regionOpts='<option value="seoul">서울</option><option value="gyeonggi">경기</option><option value="metro">광역시·세종·창원</option><option value="etc" selected>그 밖의 지역</option>';
+const sizeOpts=[1,2,3,4,5,6,7].map(n=>`<option value="${n}"${n===2?' selected':''}>${n}명</option>`).join('');
+
+function suupEnvasan(r,home,gen,fin,debt,giftGen,giftFin){const lim=HOME_LIMIT[r]*10000;const hIn=Math.min(home,lim),hEx=Math.max(0,home-lim);let j=hIn,i=gen+hEx+(giftGen||0),f=Math.max(0,fin+(giftFin||0)-RESERVE);let d=BASIC_SUUP[r]*10000+debt;let u;u=Math.min(j,d);j-=u;d-=u;u=Math.min(i,d);i-=u;d-=u;u=Math.min(f,d);f-=u;d-=u;return j*0.0104+i*0.0417+f*0.0626;}
+function obEnvasan(r,home,gen,fin,debt){let j=home,i=gen,f=Math.max(0,fin-RESERVE);let d=BASIC_OB[r]*10000+debt;let u;u=Math.min(j,d);j-=u;d-=u;u=Math.min(i,d);i-=u;d-=u;u=Math.min(f,d);f-=u;d-=u;return j*0.0104+(i+f)*0.0208;}
+// 재산 소득환산 단계별 상세(문서용). suupEnvasan과 동일한 계산.
+function envDetail(r,home,gen,fin,debt,giftGen,giftFin){
+  const lim=HOME_LIMIT[r]*10000; const hIn=Math.min(home,lim), hEx=Math.max(0,home-lim);
+  let j=hIn, i=gen+hEx+(giftGen||0), f=Math.max(0,fin+(giftFin||0)-RESERVE);
+  const j0=j,i0=i,f0=f; const basic=BASIC_SUUP[r]*10000; let d=basic+debt; let u;
+  u=Math.min(j,d);j-=u;d-=u;const dJ=u; u=Math.min(i,d);i-=u;d-=u;const dI=u; u=Math.min(f,d);f-=u;d-=u;const dF=u;
+  return {lim,hIn,hEx,j0,i0,f0,basic,debt,dJ,dI,dF,jF:j,iF:i,fF:f,envJu:j*0.0104,envIl:i*0.0417,envGeum:f*0.0626,env:j*0.0104+i*0.0417+f*0.0626};
+}
+function giftDetailList(){
+  const rate=($('giftWho')&&$('giftWho').value==='ob')?1.0:0.5; const sizeFn=makeSizeFn();
+  return [].slice.call(document.querySelectorAll('.giftcard')).map((c,i)=>{
+    const amt=(parseFloat(c.querySelector('.gAmt').value)||0)*10000;
+    const kind=c.querySelector('.gKind').value; const dateStr=c.querySelector('.gDate').value;
+    return {i:i+1,kind,amt,dateStr,r:giftEntry(amt,dateStr,rate,sizeFn),rate};
+  });
+}
+
+let obN=0;
+function addObligor(){
+  obN++;
+  const div=document.createElement('div');
+  div.className='obcard';
+  div.innerHTML=`
+    <div class="obhead"><b>가족 <span class="num"></span></b><button class="del" type="button">삭제</button></div>
+    <div class="grid">
+      <div class="fld"><label>관계</label><select class="oType"><option value="general">아들 · 며느리</option><option value="md">결혼한 딸 · 사위</option><option value="general">결혼 안 한 딸</option></select></div>
+      <div class="fld"><label>그 가족이 사는 지역</label><select class="oRegion">${regionOpts}</select></div>
+      <div class="fld"><label>그 가족 식구 수 <span class="u">본인+배우자 등</span></label><select class="oSize">${sizeOpts}</select></div>
+    </div>
+    <div class="genFields">
+      <div class="grid">
+        <div class="fld"><label>그 가족의 한 달 소득</label><div><input class="oInc" type="number" placeholder="0" min="0"> <span class="u">만원</span></div></div>
+        <div class="fld"><label>사는 집</label><div><input class="oHome" type="number" placeholder="0" min="0"> <span class="u">만원</span></div></div>
+        <div class="fld"><label>그 밖의 부동산·차</label><div><input class="oGen" type="number" placeholder="0" min="0"> <span class="u">만원</span></div></div>
+        <div class="fld"><label>예금·적금·주식 등</label><div><input class="oFin" type="number" placeholder="0" min="0"> <span class="u">만원</span></div></div>
+        <div class="fld"><label>갚아야 할 빚</label><div><input class="oDebt" type="number" placeholder="0" min="0"> <span class="u">만원</span></div></div>
+        <div class="fld"><label>부모님이 준 재산(일반) <span class="u">중복 방지</span></label><div><input class="oGiftDedGen" type="number" placeholder="0" min="0"> <span class="u">만원</span></div></div>
+        <div class="fld"><label>부모님이 준 재산(예금)</label><div><input class="oGiftDedFin" type="number" placeholder="0" min="0"> <span class="u">만원</span></div></div>
+      </div>
+    </div>
+    <div class="mdFields hidden">
+      <p class="hint" style="margin:8px 0 4px">결혼한 딸·사위는 소득·집·부동산은 안 보고 <b>예금 등만</b> 봅니다. 예금 등이 2억원 미만이면 통과예요.</p>
+      <div class="grid">
+        <div class="fld"><label>예금·적금·주식 등</label><div><input class="oFin2" type="number" placeholder="0" min="0"> <span class="u">만원</span></div></div>
+        <div class="fld"><label>갚아야 할 빚</label><div><input class="oDebt2" type="number" placeholder="0" min="0"> <span class="u">만원</span></div></div>
+        <div class="fld"><label>부모님이 준 예금(중복 방지)</label><div><input class="oGiftDedFin2" type="number" placeholder="0" min="0"> <span class="u">만원</span></div></div>
+      </div>
+    </div>
+    <label class="chk"><input type="checkbox" class="oWaive"><span>이 가족은 <b>안 봐도 되는 경우</b>예요 (집에 기초연금 어르신·중증장애인 등)</span></label>
+    <label class="chk"><input type="checkbox" class="oCant"><span>이 가족에게 <b>실제로 도움을 못 받아요</b> (연 끊김·거부·해외·파산 등)</span></label>
+    <div class="obres res"></div>`;
+  $('obList').appendChild(div);
+  div.querySelector('.del').onclick=()=>{div.remove();calc();};
+  calc();
+}
+$('addOb').onclick=addObligor;
+
+function computeSPA(){
+  const work=(parseFloat($('spaWork').value)||0)*10000;
+  const t=$('spaType').value;
+  let net=0;
+  if(t==='g30'||t==='p30') net=work*0.7;
+  else if(t==='d20_30') net=Math.max(0,work-200000)*0.7;
+  else if(t==='y60_30') net=Math.max(0,work-600000)*0.7;
+  else if(t==='r20_50') net=Math.max(0,work-200000)*0.5;
+  const other=(parseFloat($('spaOther').value)||0)*10000;
+  const ded=(parseFloat($('spaDed').value)||0)*10000;
+  const spa=Math.max(0,net+other-ded);
+  $('spaOut').innerHTML=`<div class="row"><span>공제 후 일한 소득</span><b>${won(net)}원</b></div>`+
+    `<div class="row"><span>+ 그 밖의 소득 ${won(other)} − 지출 ${won(ded)}</span><span></span></div>`+
+    `<div class="row"><span><b>= 한 달 소득</b></span><b>${won(spa)}원</b></div>`;
+  return spa;
+}
+$('spaFill').onclick=()=>{const v=computeSPA(); $('hInc').value=Math.round(v/10000); calc();};
+
+// 증여·처분 1건의 남은 금액 계산 (날짜 기준). 처분·증여일이 속한 달부터 오늘 달까지
+// 매달 그 해 기준중위소득×차감율을 뺌. 2021.6.30 이전+5년경과분은 제외(원문 p.156·158).
+// 가구원수 변동 반영: sizeFn(y,mo)이 그 달의 가구원수를 돌려줌.
+function giftEntry(amt,dateStr,rate,sizeFn,surveyDate){
+  if(!(amt>0)) return {status:'empty'};
+  if(!dateStr) return {status:'nodate'};
+  const disp=new Date(dateStr+'T00:00:00'); if(isNaN(disp.getTime())) return {status:'nodate'};
+  const now=surveyDate?surveyDate:new Date(); const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  if(disp>today) return {status:'future'};
+  const cutoff=new Date(2021,5,30);                 // 2021-06-30
+  const fiveYr=new Date(disp.getFullYear()+5,disp.getMonth(),disp.getDate());
+  if(disp<=cutoff && fiveYr<=today) return {status:'excluded',amt}; // 5년 경과 → 제외
+  const yrs=Object.keys(MEDIAN_HIST).map(Number); const minY=Math.min.apply(null,yrs),maxY=Math.max.apply(null,yrs);
+  let y=disp.getFullYear(), mo=disp.getMonth(); const buckets={}; let deduct=0, guard=0;
+  while(y<today.getFullYear() || (y===today.getFullYear() && mo<=today.getMonth())){
+    const yy=Math.min(maxY,Math.max(minY,y));        // 표에 없는 과거는 가장 이른 해로 근사
+    const size=sizeFn(y,mo);
+    const monthly=Math.round(MEDIAN_HIST[yy][size]*rate);
+    if(!buckets[y]) buckets[y]={cnt:0,sum:0,sizes:{}};
+    buckets[y].cnt++; buckets[y].sum+=monthly; buckets[y].sizes[size]=(buckets[y].sizes[size]||0)+1;
+    deduct+=monthly;
+    mo++; if(mo>11){mo=0;y++;}
+    if(++guard>720) break;
+  }
+  return {status:'ok',amt,deduct,remain:Math.max(0,amt-deduct),buckets};
+}
+// 가구원수 변동 구간: 기본은 giftSize, 변동행(년월·인원)을 추가하면 그 달부터 적용.
+function makeSizeFn(){
+  const base=parseInt(($('giftSize')&&$('giftSize').value)||'2',10);
+  const segs=[];
+  [].slice.call(document.querySelectorAll('.gseg')).forEach(r=>{
+    const ym=r.querySelector('.gsegYm').value;
+    const sz=parseInt(r.querySelector('.gsegSize').value,10);
+    if(ym){const parts=ym.split('-');const yy=parseInt(parts[0],10),mm=parseInt(parts[1],10);
+      if(yy&&mm) segs.push({key:yy*12+(mm-1),size:sz});}
+  });
+  segs.sort((a,b)=>a.key-b.key);
+  return function(y,mo){let s=base;const key=y*12+mo;for(let i=0;i<segs.length;i++){if(segs[i].key<=key)s=segs[i].size;else break;}return s;};
+}
+function addGiftSeg(pre){
+  const opts=[1,2,3,4,5,6,7].map(n=>'<option value="'+n+'">'+n+'명</option>').join('');
+  const div=document.createElement('div'); div.className='gseg';
+  div.style.cssText='display:flex;gap:6px;align-items:center;margin-bottom:4px';
+  div.innerHTML='<input class="gsegYm" type="month" style="flex:1;min-width:0"> '+
+    '<span class="u">부터</span> <select class="gsegSize">'+opts+'</select> '+
+    '<button class="gsegDel" type="button" style="border:1px solid var(--no);color:var(--no);background:transparent;border-radius:8px;padding:3px 8px;font-size:12px;cursor:pointer">삭제</button>';
+  $('giftSegList').appendChild(div);
+  if(pre){if(pre.ym!==undefined)div.querySelector('.gsegYm').value=pre.ym; if(pre.size!==undefined)div.querySelector('.gsegSize').value=pre.size;}
+  div.querySelector('.gsegDel').onclick=()=>{div.remove();computeGift();};
+  [].slice.call(div.querySelectorAll('.gsegYm,.gsegSize')).forEach(e=>{e.addEventListener('input',computeGift);e.addEventListener('change',computeGift);});
+  return div;
+}
+function computeGift(){
+  const rate=($('giftWho')&&$('giftWho').value==='ob')?1.0:0.5;
+  const sizeFn=makeSizeFn();
+  const cards=[].slice.call(document.querySelectorAll('.giftcard'));
+  let totGen=0,totFin=0,out='',any=false;
+  cards.forEach((c,i)=>{
+    const amt=(parseFloat(c.querySelector('.gAmt').value)||0)*10000;
+    const kind=c.querySelector('.gKind').value;
+    const dateStr=c.querySelector('.gDate').value;
+    const r=giftEntry(amt,dateStr,rate,sizeFn);
+    const resEl=c.querySelector('.gRes');
+    const label=(kind==='fin'?'예금':'일반');
+    if(r.status==='ok'){
+      any=true; if(kind==='fin') totFin+=r.remain; else totGen+=r.remain;
+      resEl.textContent='남은 '+won(r.remain)+'원'+(r.remain<=0?' · 다 소진':''); resEl.style.color=r.remain<=0?'var(--ok)':'';
+      const yb=Object.keys(r.buckets).map(Number).sort((a,b)=>b-a).map(yy=>yy+'년 '+r.buckets[yy].cnt+'개월').join(', ');
+      out+=`<div class="row"><span>${i+1}. ${label} ${won(r.amt)}원 <span class="u">(${yb})</span></span><b>${won(r.remain)}원</b></div>`;
+    }else if(r.status==='excluded'){
+      any=true; resEl.textContent='제외 (2021.6.30 이전·5년 경과)'; resEl.style.color='var(--ok)';
+      out+=`<div class="row"><span>${i+1}. ${label} ${won(r.amt)}원</span><b style="color:var(--ok)">제외</b></div>`;
+    }else if(r.status==='future'){ resEl.textContent='날짜가 미래예요'; resEl.style.color='var(--no)'; }
+    else if(r.status==='nodate'){ resEl.textContent=(amt>0?'날짜를 넣어주세요':''); resEl.style.color=''; }
+    else{ resEl.textContent=''; resEl.style.color=''; }
+  });
+  const manual=$('giftManual')&&$('giftManual').checked;
+  if(any){
+    out+=`<div class="row" style="border-top:1px solid var(--line);margin-top:4px;padding-top:6px"><span><b>남은 합계</b> <span class="u">일반 ${won(totGen)} · 예금 ${won(totFin)}</span></span><b>${won(totGen+totFin)}원</b></div>`;
+    if(!manual){
+      out+=`<div class="row"><span style="color:var(--ok);font-size:11.5px">→ 위 '처분·증여한 부동산·차 / 예금 등' 칸에 자동 반영됨</span><span></span></div>`;
+      // 계산된 남은 금액을 위 재산 칸에 자동 적용(수동 입력 불필요)
+      if($('hGiftGen')) $('hGiftGen').value=Math.round(totGen/10000);
+      if($('hGiftFin')) $('hGiftFin').value=Math.round(totFin/10000);
+    } else {
+      out+=`<div class="row"><span class="u" style="font-size:11.5px">직접 입력 모드예요. 위 값이 자동 반영되지 않으니, 이 '남은 합계'를 참고해 직접 넣으세요.</span><span></span></div>`;
+    }
+  }
+  else if(!manual) out='<div class="row"><span class="u">금액·날짜를 넣으면 남은 금액이 위 칸에 자동 반영돼요.</span><span></span></div>';
+  else out='<div class="row"><span class="u">직접 입력 모드예요.</span><span></span></div>';
+  if($('giftOut')) $('giftOut').innerHTML=out;
+  return {gen:totGen,fin:totFin};
+}
+function addGiftRow(pre){
+  const div=document.createElement('div');
+  div.className='giftcard';
+  div.style.cssText='border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:6px';
+  div.innerHTML='<div class="grid">'+
+    '<div class="fld"><label>금액 <span class="u">사용처 확인 안 된</span></label><div><input class="gAmt" type="number" placeholder="0" min="0"> <span class="u">만원</span></div></div>'+
+    '<div class="fld"><label>종류</label><select class="gKind"><option value="gen">부동산·차(일반)</option><option value="fin">예금(금융)</option></select></div>'+
+    '<div class="fld"><label>증여·처분한 날</label><input class="gDate" type="date"></div>'+
+    '</div>'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;gap:8px">'+
+    '<span class="gRes u"></span>'+
+    '<button class="gDel" type="button" style="border:1px solid var(--no);color:var(--no);background:transparent;border-radius:8px;padding:3px 10px;font-size:12px;cursor:pointer">삭제</button>'+
+    '</div>';
+  $('giftList').appendChild(div);
+  if(pre){ if(pre.gAmt!==undefined)div.querySelector('.gAmt').value=pre.gAmt; if(pre.gKind!==undefined)div.querySelector('.gKind').value=pre.gKind; if(pre.gDate!==undefined)div.querySelector('.gDate').value=pre.gDate; }
+  div.querySelector('.gDel').onclick=()=>{div.remove();computeGift();};
+  [].slice.call(div.querySelectorAll('.gAmt,.gKind,.gDate')).forEach(e=>{e.addEventListener('input',computeGift);e.addEventListener('change',computeGift);});
+  return div;
+}
+if($('giftAdd')) $('giftAdd').onclick=()=>{addGiftRow();};
+if($('giftSegAdd')) $('giftSegAdd').onclick=()=>{addGiftSeg();};
+if($('giftCalc')) $('giftCalc').onclick=()=>{computeGift();calc();};
+['giftWho','giftSize'].forEach(function(id){var el=$(id);if(el)el.addEventListener('change',computeGift);});
+// 위 처분·증여 두 칸: 기본 잠금(자동), '직접 입력' 체크 시에만 수동 편집 허용
+function applyGiftManual(){
+  const on=$('giftManual')&&$('giftManual').checked;
+  ['hGiftGen','hGiftFin'].forEach(function(id){if($(id))$(id).readOnly=!on;});
+  if($('giftManualWarn')) $('giftManualWarn').classList.toggle('hidden',!on);
+  computeGift(); calc();
+}
+if($('giftManual')) $('giftManual').addEventListener('change',applyGiftManual);
+
+// 주어진 증여재산(일반/금융, 원)으로 본인 가구 소득인정액을 계산(특례 반영). 나머지 입력은 현재값 고정.
+function sojeongWith(giftGen,giftFin){
+  const rHome=$('rHome').value;
+  const home=val('hHome'),gen=val('hGen'),fin=val('hFin'),debt=val('hDebt'),carVal=val('hCar');
+  const hInc=Math.max(0,val('hInc')-Math.round(val('hPension')*0.75));
+  let hEnv=suupEnvasan(rHome,home,gen,fin,debt,giftGen,giftFin);
+  if($('incapable').checked||$('disposalHard').checked){
+    const car100=carVal>0;
+    const netAsset=home+gen+fin+giftGen+giftFin+carVal-debt;
+    const finRaw=fin+giftFin;
+    if(!car100 && netAsset<=SPECIAL_BASE[rHome]*10000 && finRaw<=SPECIAL_FIN[rHome]*10000) hEnv=0;
+  }
+  hEnv+=carVal;
+  return hInc+hEnv;
+}
+// 증여재산의 자연적 소비로 소득인정액이 줄어, 언제 생계·의료 기준을 통과할지 추정
+function projectPass(hSize){
+  const cards=[].slice.call(document.querySelectorAll('.giftcard'));
+  if(!cards.length) return null;
+  const sizeFn=makeSizeFn();
+  const rate=($('giftWho')&&$('giftWho').value==='ob')?1.0:0.5;
+  const S=SAENG32[hSize],U=UIRYO40[hSize];
+  const base=new Date(); const startY=base.getFullYear(),startM=base.getMonth();
+  function giftsAt(k){ // k개월 뒤 남은 증여재산 합계(일반/금융)
+    const sv=new Date(startY,startM+k,15); let g=0,f=0,active=false;
+    cards.forEach(c=>{
+      const amt=(parseFloat(c.querySelector('.gAmt').value)||0)*10000;
+      const kind=c.querySelector('.gKind').value;
+      const dateStr=c.querySelector('.gDate').value;
+      const r=giftEntry(amt,dateStr,rate,sizeFn,sv);
+      if(r.status==='ok'){ if(kind==='fin')f+=r.remain; else g+=r.remain; if(r.remain>0)active=true; }
+    });
+    return {g,f,active};
+  }
+  const now=giftsAt(0);
+  const sjNow=sojeongWith(now.g,now.f);
+  const saengFailNow=sjNow>S, uiryoFailNow=sjNow>U;
+  if(!saengFailNow && !uiryoFailNow) return {none:true}; // 이미 통과
+  if(!now.active) return null; // 줄어들 증여재산이 없음
+  const MAXK=240; let saengK=saengFailNow?null:0, uiryoK=uiryoFailNow?null:0; let lastActive=0;
+  for(let k=1;k<=MAXK;k++){
+    const gg=giftsAt(k); if(gg.active)lastActive=k;
+    const sj=sojeongWith(gg.g,gg.f);
+    if(saengK===null && sj<=S) saengK=k;
+    if(uiryoK===null && sj<=U) uiryoK=k;
+    if((saengK!==null||!saengFailNow)&&(uiryoK!==null||!uiryoFailNow)) break;
+    if(!gg.active) break; // 증여재산 다 소진됐는데도 미통과
+  }
+  // 다 소진된 뒤 바닥 소득인정액(증여=0)
+  const floor=sojeongWith(0,0);
+  return {S,U,sjNow,saengFailNow,uiryoFailNow,saengK,uiryoK,floor,floorSaengOk:floor<=S,floorUiryoOk:floor<=U};
+}
+function fmtWhen(k){
+  if(k===0) return '지금';
+  const d=new Date(); d.setMonth(d.getMonth()+k);
+  const y=d.getFullYear(), m=d.getMonth()+1;
+  const yrs=Math.floor(k/12), mos=k%12;
+  const dur=(yrs?yrs+'년 ':'')+(mos?mos+'개월':'')||'0개월';
+  return `약 ${dur} 뒤 (${y}년 ${m}월경)`;
+}
+
+function computeSep(){
+  if(!$('sepR'))return;
+  const r=$('sepR').value, size=$('sepSize').value;
+  const g=id=>(parseFloat($(id).value)||0)*10000;
+  const inc=g('sepInc');
+  const env=suupEnvasan(r,g('sepHome'),g('sepGen'),g('sepFin'),g('sepDebt'),0,0);
+  const so=inc+env;
+  const pill=p=>`<span class="pill ${p?'y':'n'}">${p?'가능 ✓':'초과'}</span>`;
+  $('sepOut').innerHTML=
+    `<div class="row"><span><b>이 별도가구 소득인정액</b></span><b>${won(so)}원/월</b></div>`+
+    `<div class="row"><span style="font-size:11.5px;color:var(--muted)">= 소득 ${won(inc)} + 재산이 소득으로 ${won(env)}</span><span></span></div>`+
+    `<div class="row"><span>🍚 생계급여 (${won(SAENG32[size])})</span>${pill(so<=SAENG32[size])}</div>`+
+    `<div class="row"><span>🏥 의료급여 (${won(UIRYO40[size])}) · 부양의무자 별도확인</span>${pill(so<=UIRYO40[size])}</div>`+
+    `<div class="row"><span>🏠 주거급여 (${won(JUGEO48[size])})</span>${pill(so<=JUGEO48[size])}</div>`+
+    `<div class="row"><span>📚 교육급여 (${won(EDU50[size])})</span>${pill(so<=EDU50[size])}</div>`;
+}
+
+function computeRent(){
+  if(!$('rentJi'))return;
+  const ji=parseInt($('rentJi').value);
+  const rentReal=(parseFloat($('rentReal').value)||0)*10000;
+  const size=Math.min(7,parseInt(curSize)||1);
+  const base=RENT[size][ji];
+  if(curSo>JUGEO48[curSize]){
+    $('rentOut').innerHTML=`<div class="row"><span>소득이 주거급여 기준(${won(JUGEO48[curSize])}원)을 넘어 <b>주거급여 대상이 아니에요</b></span><span></span></div>`;return;
+  }
+  const selfPay=Math.max(0,curSo-SAENG32[curSize])*0.30;
+  const cap=rentReal>0?Math.min(base,rentReal):base;
+  const pay=Math.max(0,cap-selfPay);
+  $('rentOut').innerHTML=
+    `<div class="row"><span>내 급지·가구원수 기준임대료(상한)</span><b>${won(base)}원</b></div>`+
+    `<div class="row"><span>자기부담분(소득−생계기준 초과×30%)</span><b>${won(selfPay)}원</b></div>`+
+    `<div class="row"><span><b>예상 월 주거급여(임차)</b></span><b>${won(pay)}원</b></div>`;
+}
+
+function buildSolutions(st){
+  const card=$('solveCard'), out=$('solve');
+  const man=v=>Math.max(0,Math.round(v/10000)).toLocaleString('ko-KR');
+  let tips=[];
+  if(!st.saengPass || !st.uiryoPass){
+    tips.push(`<div class="res warn"><b>① 먼저 '제대로 평가받기'</b><br>은행 대출 등 <b>갚아야 할 빚</b>과 병원비·국민연금 보험료 등 <b>빠뜨린 공제</b>가 없는지 확인하세요. 자동차도 장애인용·생업용·노후차면 낮게 계산되거나 빠집니다.${st.hInc>st.U?' <b>지금은 소득 자체가 기준보다 커서</b> 소득 공제 확인이 특히 중요해요.':''}</div>`);
+    if(st.incapable){
+      tips.push(`<div class="res warn"><b>② 재산이 소득으로 안 잡히게(특례)</b><br>일할 사람이 없는 집이면 빚 뺀 재산·예금을 지역 한도 이하로 맞추면 재산이 소득으로 계산되지 않아요(위 상세설명 한도 참고).</div>`);
+    }
+    if(st.hEnv>0){
+      const needU=Math.max(0,st.sojeong-st.U), needS=Math.max(0,st.sojeong-st.S);
+      let t=`<div class="res warn"><b>③ 재산(예금 등)을 줄이면</b><br>`;
+      if(needU>0) t+=`예금 등을 약 <b>${man(needU/0.0626)}만원</b> 줄이면 <b>의료급여</b> 기준을 넘겨요.<br>`;
+      if(needS>0) t+=`예금 등을 약 <b>${man(needS/0.0626)}만원</b> 줄이면 <b>생계급여</b> 기준을 넘겨요.<br>`;
+      t+=`<span class="u">방법: 병원비·학비 등 실제 지출, 또는 예금으로 마이너스 통장·카드론·은행빚 갚기(금융조회로 소명되면 재산 줄어든 것으로 인정, p.158). 실제로 써야 반영되고 3개월 평균으로 조사돼요(p.144).</span></div>`;
+      tips.push(t);
+    }
+  }
+  if(st.uiryoPass && st.medBlock){
+    (st.obDetails||[]).filter(o=>o.blocker).forEach(o=>{
+      if(o.isMD){
+        tips.push(`<div class="res no"><b>가족 #${o.idx} (결혼한 딸·사위)</b><br>예금 등만 봐요. 지금 약 ${man(o.mdNet)}만원 → <b>2억 500만원 미만</b>이면 통과. 줄이는 방법은 위 ③과 같아요.</div>`);
+      } else {
+        let t=`<div class="res no"><b>가족 #${o.idx} (아들·며느리 등) — 적용될 수 있는 경우</b><br>`;
+        if(o.assetPass===false) t+=`• 이 가족 <b>재산</b>이 많아요 → 인정되는 빚 반영·실제 감소로 낮추면 통과.<br>`;
+        if(o.incPass===false) t+=`• 이 가족 <b>소득</b>이 부양의무자 기준(꽤 높음)보다 많아요.<br>`;
+        t+=`• <b>부양을 받을 수 없는 경우</b>로 인정되면 보장돼요 — 부양 거부·기피, 가족관계 해체(단절), 해외 1년 이상 체류, 이 가족이 파산·신용불량 등(사실관계 소명 시, p.206~208).</div>`;
+        tips.push(t);
+      }
+    });
+    tips.push(`<div class="res warn"><b>가족 항목 공통 — 이런 경우 적용 가능</b><br>• 급여 받을 집에 <b>중증장애인</b>이 있거나, 그 가족 집에 <b>기초연금 어르신·중증장애인</b>이 있으면 가족 형편을 안 봐도 돼요(p.209, 위 체크박스).<br>• <b>(외)조부모와 사는 18세 미만 손주</b> 등은 '나눠 받기(별도가구)'로 손주만 받을 수 있어요(p.42).<br>• 받을 분이 <b>어르신·장애인·한부모·중증질환</b>이면 기준이 완화돼요(p.197, 위 체크박스).<br><span class="u">각 경우는 요건에 해당하고 담당기관이 사실을 확인(소명)하면 적용됩니다.</span></div>`);
+  }
+  out.innerHTML=tips.join('');
+  card.style.display=tips.length?'block':'none';
+}
+
+function calc(){
+  computeSPA();
+  computeGift();
+  computeSep();
+  const hSize=$('hSize').value, rHome=$('rHome').value;
+  const A=MEDIAN[hSize], S=SAENG32[hSize], U=UIRYO40[hSize];
+  const hIncRaw=val('hInc');
+  const pensionDed=Math.round(val('hPension')*0.75); // 국민연금 본인부담 보험료 75% 공제(p.133)
+  const hInc=Math.max(0,hIncRaw-pensionDed);
+  const carVal=val('hCar');
+  let hEnv=suupEnvasan(rHome,val('hHome'),val('hGen'),val('hFin'),val('hDebt'),val('hGiftGen'),val('hGiftFin'));
+  let teukMsg=''; let teukPass=false;
+  let teukNet=val('hHome')+val('hGen')+val('hFin')+val('hGiftGen')+val('hGiftFin')+carVal-val('hDebt');
+  let teukFin=val('hFin')+val('hGiftFin');
+  if($('incapable').checked || $('disposalHard').checked){
+    const car100=carVal>0;
+    const netAsset=teukNet;
+    const finRaw=teukFin;
+    const baseLimit=SPECIAL_BASE[rHome]*10000, finLimit=SPECIAL_FIN[rHome]*10000;
+    if(!car100 && netAsset<=baseLimit && finRaw<=finLimit){
+      hEnv=0; teukPass=true;
+      teukMsg=`<div class="row"><span>✅ 재산이 적어서 <b>재산은 소득으로 안 잡혀요</b></span><span class="pill y">특례</span></div>`+
+        `<div class="row"><span style="font-size:11.5px;color:var(--muted)">빚 뺀 재산 ${won(netAsset)} · 예금 ${won(finRaw)} 모두 기준 이내</span><span></span></div>`;
+    } else {
+      const why=car100?'전액 계산되는 차가 있어요':(netAsset>baseLimit?'재산이 특례 한도보다 많아요':'예금 등이 특례 한도보다 많아요');
+      teukMsg=`<div class="row"><span>재산도 소득으로 계산돼요 (${why})</span><span class="pill n">일반</span></div>`;
+    }
+  }
+  hEnv+=carVal; // 일반 승용차 월 100% 환산(기본재산액·부채 차감 없음)
+  const sojeong=hInc+hEnv;
+  const saengSelfPass=sojeong<=S, uiryoSelfPass=sojeong<=U;
+  $('m1').innerHTML=teukMsg+
+    `<div class="row"><span><b>계산된 우리 집 한 달 소득</b></span><b>${won(sojeong)}원</b></div>`+
+    (pensionDed>0?`<div class="row"><span style="font-size:11.5px;color:var(--muted)">국민연금 보험료 공제 −${won(pensionDed)} (납부액의 75%, p.133) 적용됨</span><span></span></div>`:``)+
+    `<div class="row"><span style="font-size:11.5px;color:var(--muted)">= 소득평가액 ${won(hInc)} + 재산이 소득으로 ${won(hEnv)}</span><span></span></div>`+
+    `<div class="row"><span>생계급여 기준 (${won(S)}원)</span><span class="pill ${saengSelfPass?'y':'n'}">${saengSelfPass?'통과 ✓':'초과'}</span></div>`+
+    `<div class="row"><span>의료급여 기준 (${won(U)}원)</span><span class="pill ${uiryoSelfPass?'y':'n'}">${uiryoSelfPass?'통과 ✓':'초과'}</span></div>`;
+
+  const vuln=$('vuln').checked, suupSevere=$('suupSevere').checked;
+  const cards=[...document.querySelectorAll('.obcard')];
+  let medBlock=false, saengBlock=false, blockers=[], obDetails=[];
+  cards.forEach((c,idx)=>{
+    c.querySelector('.num').textContent='#'+(idx+1);
+    const type=c.querySelector('.oType').value, isMD=(type==='md');
+    c.querySelector('.genFields').classList.toggle('hidden',isMD);
+    c.querySelector('.mdFields').classList.toggle('hidden',!isMD);
+    const region=c.querySelector('.oRegion').value;
+    const B=MEDIAN[c.querySelector('.oSize').value];
+    const gv=cl=>(parseFloat(c.querySelector(cl).value)||0)*10000;
+    const waive=c.querySelector('.oWaive').checked, cant=c.querySelector('.oCant').checked;
+    let able, reason, saengEx=false, mdNet=null, incPass=null, assetPass=null;
+    let dInc=null,dGen=null,dFin=null,dIncT=null,dAssetT=null,dEnv=null,dVulnUsed=false,dHome=null,dDebt=null;
+    if(isMD){
+      const finMd=Math.max(0,gv('.oFin2')-gv('.oGiftDedFin2'));
+      mdNet=Math.max(0,finMd-RESERVE-gv('.oDebt2'));
+      able=!(mdNet<200000000);
+      reason=`예금 등 ${won(mdNet)} ${mdNet<2e8?'→ 2억 미만 ✓':'→ 2억 이상'}`;
+    } else {
+      const inc=gv('.oInc');
+      const gen=Math.max(0,gv('.oGen')-gv('.oGiftDedGen'));
+      const fin=Math.max(0,gv('.oFin')-gv('.oGiftDedFin'));
+      let incT=A*0.4+B*1.0; const alt=(A+B)*0.74; if(vuln&&alt>incT){incT=alt;dVulnUsed=true;}
+      incPass=inc<incT;
+      const assetT=(A+B)*0.18;
+      const env=obEnvasan(region,gv('.oHome'),gen,fin,gv('.oDebt'));
+      assetPass=env<assetT;
+      able=!(incPass&&assetPass);
+      reason=`소득 ${incPass?'적음 ✓':'많음 ✗'} · 재산 ${assetPass?'적음 ✓':'많음 ✗'}`;
+      saengEx=(inc*12>130000000)||(gen>1200000000);
+      dInc=inc;dGen=gen;dFin=fin;dIncT=incT;dAssetT=assetT;dEnv=env;dHome=gv('.oHome');dDebt=gv('.oDebt');
+    }
+    let waived=waive || (suupSevere && !saengEx);
+    let ok,label,cls;
+    if(waived){ok=true;label='안 봐도 되는 가족 → 통과';cls='ok';}
+    else if(!able){ok=true;label='도와줄 형편이 안 됨 → 통과';cls='ok';}
+    else if(cant){ok=true;label='형편은 되지만 실제 도움 못 받음 → 심사로 구제 가능';cls='warn';}
+    else{ok=false;label='도와줄 형편이 됨 → 이 가족 때문에 못 받을 수 있어요';cls='no';}
+    if(!ok){medBlock=true;blockers.push('#'+(idx+1));}
+    if(saengEx && !cant) saengBlock=true;
+    const r=c.querySelector('.obres');
+    r.className='obres res '+cls;
+    r.innerHTML=`<b>${label}</b> <div class="calc">${reason}${saengEx?' · ⚠소득·재산이 매우 많아 생계급여에도 영향':''}</div>`;
+    obDetails.push({idx:idx+1,isMD,cant,waived,able,saengEx,label,mdNet,incPass,assetPass,blocker:!ok,
+      type,region,B,inc:dInc,gen:dGen,fin:dFin,incT:dIncT,assetT:dAssetT,env:dEnv,vulnUsed:dVulnUsed,home:dHome,debt:dDebt});
+  });
+  const r2=$('res2');
+  if(cards.length===0){r2.className='res warn';r2.innerHTML='따로 사는 부모·자녀가 있으면 아래 ＋로 추가하세요. 아무도 없으면 이 항목은 통과예요.';}
+  else{r2.className='res '+(medBlock?'no':'ok');
+    r2.innerHTML=medBlock?`<b>${blockers.join(', ')} 가족 때문에 의료급여를 못 받을 수 있어요.</b> 그 가족에게 실제로 도움을 못 받는 사정이 있으면 위에서 체크하세요.`:`<b>가족 모두 통과</b> — 의료급여는 이 부분에서 문제없어요.`;}
+
+  let sc,sm,sw;
+  if(!saengSelfPass){sc='no';sm='지금 조건으론 어려워요';sw=`계산된 한 달 소득 ${won(sojeong)}원이 기준 ${won(S)}원보다 많아요`;}
+  else if(saengBlock){sc='warn';sm='조건에 따라 가능할 수 있어요';sw='소득은 되는데, 아주 잘사는 가족이 있어 확인이 필요해요';}
+  else{sc='ok';sm='받을 수 있을 것 같아요';sw='계산된 한 달 소득이 생계급여 기준 이하예요';}
+  $('fSaeng').className='fcard '+sc;$('fSaengB').textContent=sm;$('fSaengW').textContent=sw;
+
+  let uc,um,uw;
+  if(!uiryoSelfPass){uc='no';um='지금 조건으론 어려워요';uw=`계산된 한 달 소득 ${won(sojeong)}원이 기준 ${won(U)}원보다 많아요`;}
+  else if(cards.length===0){uc='warn';um='가족 확인이 필요해요';uw='소득은 기준 이하예요. 따로 사는 부모·자녀를 추가해 확인하세요';}
+  else if(!medBlock){uc='ok';um='받을 수 있을 것 같아요';uw='소득도 기준 이하이고, 따로 사는 가족도 모두 통과예요';}
+  else{uc='no';um='가족 때문에 어려울 수 있어요';uw=`${blockers.join(', ')} 가족의 소득·재산이 많아요`;}
+  $('fUiryo').className='fcard '+uc;$('fUiryoB').textContent=um;$('fUiryoW').textContent=uw;
+
+  // 주거급여·교육급여 (부양의무자 기준 없음 — 소득인정액만)
+  const jPass=sojeong<=JUGEO48[hSize];
+  $('fJugeo').className='fcard '+(jPass?'ok':'no');
+  $('fJugeoB').textContent=jPass?'받을 수 있을 것 같아요':'지금 조건으론 어려워요';
+  $('fJugeoW').textContent=jPass?`소득이 주거급여 기준(${won(JUGEO48[hSize])}원) 이하예요`:`계산된 소득 ${won(sojeong)}원 > 기준 ${won(JUGEO48[hSize])}원`;
+  const ePass=sojeong<=EDU50[hSize];
+  $('fEdu').className='fcard '+(ePass?'ok':'no');
+  $('fEduB').textContent=ePass?'받을 수 있을 것 같아요':'지금 조건으론 어려워요';
+  $('fEduW').textContent=ePass?`소득이 교육급여 기준(${won(EDU50[hSize])}원) 이하 · 초·중·고 학생이 있는 가구 대상`:`계산된 소득 ${won(sojeong)}원 > 기준 ${won(EDU50[hSize])}원`;
+
+  curSo=sojeong; curSize=hSize; computeRent();
+
+  buildSolutions({saengPass:saengSelfPass,uiryoPass:uiryoSelfPass,sojeong,S,U,hInc,hEnv,incapable:$('incapable').checked,medBlock,obDetails});
+  renderProjection(hSize);
+  LAST={hSize,rHome,A,S,U,hInc,hIncRaw,pensionDed,carVal,
+    home:val('hHome'),gen:val('hGen'),fin:val('hFin'),debt:val('hDebt'),giftGen:val('hGiftGen'),giftFin:val('hGiftFin'),
+    envD:envDetail(rHome,val('hHome'),val('hGen'),val('hFin'),val('hDebt'),val('hGiftGen'),val('hGiftFin')),
+    teukOn:($('incapable').checked||$('disposalHard').checked),incapable:$('incapable').checked,disposalHard:$('disposalHard').checked,
+    teukPass,teukNet,teukFin,teukBase:SPECIAL_BASE[rHome]*10000,teukFinLimit:SPECIAL_FIN[rHome]*10000,
+    hEnv,sojeong,saengSelfPass,uiryoSelfPass,
+    jugeoBase:JUGEO48[hSize],eduBase:EDU50[hSize],jPass,ePass,
+    vuln,suupSevere,obDetails,medBlock,blockers,
+    gifts:giftDetailList(),giftWho:($('giftWho')?$('giftWho').value:'self'),
+    proj:(function(){try{return projectPass(hSize);}catch(e){return null;}})()};
+}
+let LAST={};
+function renderProjection(hSize){
+  const card=$('projCard'), out=$('projOut'); if(!card||!out) return;
+  let p; try{ p=projectPass(hSize); }catch(e){ p=null; }
+  if(!p || p.none){ card.style.display='none'; out.innerHTML=''; return; }
+  let html='';
+  const line=(label,failNow,k,floorOk)=>{
+    if(!failNow) return `<div class="row"><span>${label}</span><span class="pill y">이미 통과</span></div>`;
+    if(k!==null && k!==undefined) return `<div class="row"><span>${label} <span class="u">기준 ${won(label.indexOf('생계')>=0?p.S:p.U)}원</span></span><b>${fmtWhen(k)}</b></div>`;
+    if(!floorOk) return `<div class="row"><span>${label}</span><span class="pill n">증여재산이 다 줄어도 미통과</span></div>`;
+    return `<div class="row"><span>${label}</span><span class="u">15년 내 미도달</span></div>`;
+  };
+  html+=`<div class="row"><span><b>지금 소득인정액</b></span><b>${won(p.sjNow)}원</b></div>`;
+  html+=line('🍚 생계급여',p.saengFailNow,p.saengK,p.floorSaengOk);
+  html+=line('🏥 의료급여(소득인정액 기준)',p.uiryoFailNow,p.uiryoK,p.floorUiryoOk);
+  if((p.saengFailNow&&!p.floorSaengOk)||(p.uiryoFailNow&&!p.floorUiryoOk)){
+    html+=`<div class="row"><span class="u">※ 증여재산이 0이 돼도 다른 소득·재산이 남아, 그것만으로는 기준을 못 넘어요(바닥 소득인정액 ${won(p.floor)}원). 다른 재산·소득도 함께 줄여야 합니다.</span><span></span></div>`;
+  }
+  out.innerHTML=html; card.style.display='';
+}
+// ===== 저장 / 불러오기 (브라우저 저장소 미사용 — 파일·코드 방식) =====
+const MAIN_IDS=['hSize','rHome','hInc','hPension','hHome','hGen','hFin','hDebt','hGiftGen','hGiftFin','hCar','spaWork','spaType','spaOther','spaDed','giftWho','giftSize','sepR','sepSize','sepInc','sepHome','sepGen','sepFin','sepDebt','rentJi','rentReal'];
+const MAIN_CHK=['incapable','disposalHard','vuln','suupSevere','giftManual'];
+const OB_VAL=['oType','oRegion','oSize','oInc','oHome','oGen','oFin','oDebt','oGiftDedGen','oGiftDedFin','oFin2','oDebt2','oGiftDedFin2'];
+const OB_CHK=['oWaive','oCant'];
+function collectState(){
+  const f={};
+  MAIN_IDS.forEach(id=>{const e=$(id);if(e)f[id]=e.value;});
+  MAIN_CHK.forEach(id=>{const e=$(id);if(e)f['k_'+id]=e.checked;});
+  const obs=[...document.querySelectorAll('.obcard')].map(c=>{const o={};
+    OB_VAL.forEach(cl=>{const e=c.querySelector('.'+cl);if(e)o[cl]=e.value;});
+    OB_CHK.forEach(cl=>{const e=c.querySelector('.'+cl);if(e)o['k_'+cl]=e.checked;});
+    return o;});
+  const gifts=[].slice.call(document.querySelectorAll('.giftcard')).map(c=>({
+    gAmt:c.querySelector('.gAmt').value, gKind:c.querySelector('.gKind').value, gDate:c.querySelector('.gDate').value}));
+  const gsegs=[].slice.call(document.querySelectorAll('.gseg')).map(r=>({
+    ym:r.querySelector('.gsegYm').value, size:r.querySelector('.gsegSize').value}));
+  return {app:'gicho2026',f,obs,gifts,gsegs};
+}
+function applyState(s){
+  if(!s||s.app!=='gicho2026'||!s.f)throw new Error('bad');
+  MAIN_IDS.forEach(id=>{if(s.f[id]!==undefined&&$(id))$(id).value=s.f[id];});
+  MAIN_CHK.forEach(id=>{if(s.f['k_'+id]!==undefined&&$(id))$(id).checked=s.f['k_'+id];});
+  $('obList').innerHTML='';obN=0;
+  (s.obs||[]).forEach(o=>{addObligor();const c=$('obList').lastElementChild;
+    OB_VAL.forEach(cl=>{if(o[cl]!==undefined){const e=c.querySelector('.'+cl);if(e)e.value=o[cl];}});
+    OB_CHK.forEach(cl=>{if(o['k_'+cl]!==undefined){const e=c.querySelector('.'+cl);if(e)e.checked=o['k_'+cl];}});
+  });
+  if($('giftList')){ $('giftList').innerHTML=''; const gs=s.gifts&&s.gifts.length?s.gifts:[{}]; gs.forEach(g=>addGiftRow(g)); }
+  if($('giftSegList')){ $('giftSegList').innerHTML=''; (s.gsegs||[]).forEach(g=>addGiftSeg(g)); }
+  if(typeof applyGiftManual==='function'){ const on=$('giftManual')&&$('giftManual').checked; ['hGiftGen','hGiftFin'].forEach(function(id){if($(id))$(id).readOnly=!on;}); if($('giftManualWarn'))$('giftManualWarn').classList.toggle('hidden',!on); }
+  calc();
+}
+function ioSay(m){$('ioMsg').textContent=m;setTimeout(()=>{if($('ioMsg'))$('ioMsg').textContent='';},4000);}
+$('btnSave').onclick=()=>{const str=JSON.stringify(collectState());$('stateBox').value=str;
+  try{const b=new Blob([str],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='기초수급진단.json';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(a.href);ioSay('저장 파일을 내려받았어요.');}
+  catch(e){ioSay('파일 저장이 막혀 있으면 아래 코드로 저장하세요.');}};
+$('btnLoadFile').onclick=()=>$('loadFile').click();
+$('loadFile').onchange=(e)=>{const file=e.target.files[0];if(!file)return;const r=new FileReader();
+  r.onload=()=>{try{applyState(JSON.parse(r.result));$('stateBox').value=r.result;ioSay('불러왔어요.');}catch(err){ioSay('파일을 읽을 수 없어요.');}};
+  r.readAsText(file);e.target.value='';};
+$('btnCopy').onclick=()=>{if(!$('stateBox').value)$('stateBox').value=JSON.stringify(collectState());$('stateBox').select();
+  try{document.execCommand('copy');ioSay('복사했어요.');}catch(e){ioSay('코드를 직접 선택해 복사하세요.');}};
+$('btnLoadText').onclick=()=>{try{applyState(JSON.parse($('stateBox').value));ioSay('불러왔어요.');}catch(e){ioSay('코드가 올바르지 않아요.');}};
+
+// ===== 신청용 근거·계산 문서 =====
+function genDoc(){
+  calc(); const L=LAST; if(!L||!L.envD) return null;
+  const W=won; const e=L.envD;
+  const now=new Date(); const dstr=now.getFullYear()+'년 '+(now.getMonth()+1)+'월 '+now.getDate()+'일';
+  const regionKo={seoul:'서울',gyeonggi:'경기',metro:'광역시·세종·창원',etc:'그 밖의 지역'}[L.rHome];
+  let h='';
+  h+=`<h1>기초생활수급 최종진단서</h1>`;
+  h+=`<p class="muted">작성일 ${dstr} · 기준연도 2026년 · 근거: 보건복지부 「2026년 국민기초생활보장 사업안내」</p>`;
+  h+=`<div class="box">신청인이 입력한 값으로 계산한 <b>참고용 근거자료</b>입니다. 각 단계에 계산식과 사업안내 쪽수를 표기했습니다. 최종 수급 여부는 보장기관(시·군·구)의 공적자료 조사로 확정됩니다(☎129).</div>`;
+  h+=`<h2>1. 가구 개요</h2><table><tr><th>가구원 수</th><td>${L.hSize}인</td><th>거주지역 구분</th><td>${regionKo}</td></tr>`;
+  h+=`<tr><th>기준 중위소득(${L.hSize}인)</th><td class="n">${W(L.A)}원</td><th>소득평가액(월)</th><td class="n">${W(L.hInc)}원</td></tr>`;
+  if(L.pensionDed>0) h+=`<tr><th>소득 산정 내역</th><td colspan="3">입력 소득 ${W(L.hIncRaw)} − 국민연금 보험료 공제 ${W(L.pensionDed)}(납부액의 75%) = <b>${W(L.hInc)}</b> <span class="cite">(공제 근거 p.133)</span></td></tr>`;
+  h+=`</table>`;
+  h+=`<p class="muted">※ 받는 연금(기초연금·국민연금 노령연금 등)은 공적이전소득으로 소득에 산입하며, 내는 국민연금 본인부담 보험료의 75%는 소득에서 공제합니다. <span class="cite">(p.121·133·148)</span></p>`;
+  h+=`<h2>2. 소득인정액 = 소득평가액 + 재산의 소득환산액</h2>`;
+  h+=`<p>소득인정액은 실제소득과 재산을 소득으로 환산한 금액의 합입니다. <span class="cite">(재산 소득환산 p.165~169, 환산율·판정기준표 p.212~216)</span></p>`;
+  h+=`<h3>2-1. 재산의 소득환산액 계산 과정</h3><table><tr><th>단계</th><th>내용</th><th>금액</th></tr>`;
+  h+=`<tr><td>주거용재산</td><td>입력 ${W(L.home)} · 주거용 한도 ${W(e.lim)} 적용<br><span class="muted">한도 내 ${W(e.hIn)} / 한도 초과분 ${W(e.hEx)} → 일반재산으로 이동</span></td><td class="n">${W(e.hIn)}</td></tr>`;
+  h+=`<tr><td>일반재산</td><td>부동산·차 ${W(L.gen)} + 주거 초과분 ${W(e.hEx)} + 처분·증여(일반) ${W(L.giftGen)}</td><td class="n">${W(e.i0)}</td></tr>`;
+  h+=`<tr><td>금융재산</td><td>예금 등 ${W(L.fin)} + 처분·증여(금융) ${W(L.giftFin)} − 생활준비금 ${W(RESERVE)}</td><td class="n">${W(e.f0)}</td></tr>`;
+  h+=`<tr><td>공제 차감<br>(순서: 주거→일반→금융)</td><td>기본재산액 ${W(e.basic)} + 부채 ${W(e.debt)} = ${W(e.basic+e.debt)}<br><span class="muted">주거 −${W(e.dJ)} · 일반 −${W(e.dI)} · 금융 −${W(e.dF)}</span></td><td class="n">−${W(e.basic+e.debt)}</td></tr>`;
+  h+=`<tr><td>환산율 적용</td><td>주거 ${W(e.jF)}×1.04% + 일반 ${W(e.iF)}×4.17% + 금융 ${W(e.fF)}×6.26%</td><td class="n">${W(e.env)}</td></tr>`;
+  if(L.carVal>0) h+=`<tr><td>자동차(월 100%)</td><td>일반 승용차 ${W(L.carVal)} × 100% <span class="cite">(재산조사: 자동차재산)</span></td><td class="n">${W(L.carVal)}</td></tr>`;
+  h+=`</table>`;
+  if(L.teukOn){
+    h+=`<h3>2-2. 재산범위 특례 판정 <span class="cite">(p.167~169)</span></h3>`;
+    const cs=[]; if(L.incapable)cs.push('근로무능력자로만 구성된 가구'); if(L.disposalHard)cs.push('재산처분이 곤란한 가구(가압류·경매·개발제한구역·정신질환·실종 등)');
+    h+=`<p>해당 사유: ${cs.join(', ')}.<br>순재산 ${W(L.teukNet)} vs 한도 ${W(L.teukBase)} · 금융 ${W(L.teukFin)} vs 한도 ${W(L.teukFinLimit)} · 100% 자동차 ${L.carVal>0?'있음':'없음'}</p>`;
+    h+= L.teukPass? `<div class="box"><b class="ok">특례 적용 → 재산의 소득환산액 0원</b> (기본조건·추가조건 모두 충족)</div>`
+      : `<div class="box"><b class="no">특례 미적용</b> — 한도 초과 또는 100% 자동차 보유. 일반가구처럼 소득환산합니다.</div>`;
+  }
+  h+=`<h2>3. 소득인정액 및 급여별 판정</h2>`;
+  h+=`<p><b>재산의 소득환산액 합계: ${W(L.hEnv)}원</b>${L.teukPass?' (특례로 재산환산 0원 + 자동차 100% 분)':''}</p>`;
+  h+=`<p style="font-size:15px"><b>소득인정액 = 소득평가액 ${W(L.hInc)} + 재산 소득환산 ${W(L.hEnv)} = ${W(L.sojeong)}원</b></p>`;
+  h+=`<table><tr><th>급여</th><th>선정기준</th><th>기준액(월)</th><th>소득인정액 기준 판정</th></tr>`;
+  h+=`<tr><td>생계급여</td><td>중위 32%</td><td class="n">${W(L.S)}</td><td>${L.saengSelfPass?'<span class="ok">충족</span>':'<span class="no">초과</span>'}</td></tr>`;
+  h+=`<tr><td>의료급여</td><td>중위 40%</td><td class="n">${W(L.U)}</td><td>${L.uiryoSelfPass?'<span class="ok">충족</span>':'<span class="no">초과</span>'}</td></tr>`;
+  h+=`<tr><td>주거급여</td><td>중위 48%</td><td class="n">${W(L.jugeoBase)}</td><td>${L.jPass?'<span class="ok">충족</span>':'<span class="no">초과</span>'}</td></tr>`;
+  h+=`<tr><td>교육급여</td><td>중위 50%</td><td class="n">${W(L.eduBase)}</td><td>${L.ePass?'<span class="ok">충족</span>':'<span class="no">초과</span>'}</td></tr></table>`;
+  h+=`<p class="muted">※ 생계급여는 2026년부터 부양의무자 기준이 원칙적으로 폐지(연소득 1.3억/재산 12억 초과 등 예외). 의료급여는 아래 부양의무자 기준을 함께 봅니다.</p>`;
+  const gs=(L.gifts||[]).filter(g=>g.r&&(g.r.status==='ok'||g.r.status==='excluded'));
+  if(gs.length){
+    h+=`<h2>4. 처분·증여재산의 자연적 소비금액 <span class="cite">(p.156~159)</span></h2>`;
+    h+=`<p>처분일이 속한 달부터 조사한 달까지 매월 자연적 소비금액을 차감합니다. 차감액 = 그 해 기준 중위소득의 ${L.giftWho==='ob'?'100%(의료급여 부양의무자 가구)':'50%(수급권자 가구)'}. 2021.6.30 이전에 처분했고 5년이 지난 재산은 제외.</p>`;
+    h+=`<table><tr><th>#</th><th>종류</th><th>처분·증여일</th><th>처분가액</th><th>연도별 차감(개월)</th><th>남은 가액</th></tr>`;
+    gs.forEach(g=>{
+      if(g.r.status==='excluded'){ h+=`<tr><td>${g.i}</td><td>${g.kind==='fin'?'금융(예금)':'일반(부동산·차)'}</td><td>${g.dateStr}</td><td class="n">${W(g.amt)}</td><td>2021.6.30 이전·5년 경과</td><td class="n ok">제외(0)</td></tr>`; }
+      else { const yb=Object.keys(g.r.buckets).map(Number).sort((a,b)=>b-a).map(yy=>yy+'년 '+g.r.buckets[yy].cnt+'개월').join(', '); h+=`<tr><td>${g.i}</td><td>${g.kind==='fin'?'금융(예금)':'일반(부동산·차)'}</td><td>${g.dateStr}</td><td class="n">${W(g.amt)}</td><td>${yb}<br><span class="muted">총 차감 ${W(g.r.deduct)}</span></td><td class="n">${W(g.r.remain)}</td></tr>`; }
+    });
+    h+=`</table>`;
+  }
+  const obs=L.obDetails||[];
+  if(obs.length){
+    h+=`<h2>5. 부양의무자 부양능력 판정 (의료급여)</h2>`;
+    h+=`<p class="muted">소득기준 (A×40%)+(B×100%), 재산기준 (A+B)×18%, 취약계층 완화 (A+B)×74%. A=수급권자 가구 중위소득(${W(L.A)}), B=부양의무자 가구 중위소득. 2026년부터 부양비 부과 폐지. <span class="cite">(p.197~209)</span></p>`;
+    obs.forEach(o=>{
+      h+=`<h3>부양의무자 #${o.idx} — ${o.type==='md'?'결혼한 딸·사위':'아들·며느리/미혼 딸 등'}</h3>`;
+      if(o.isMD){
+        h+=`<table><tr><th>항목</th><th>값</th><th>기준</th><th>판정</th></tr><tr><td>순금융재산(예금 등)</td><td class="n">${W(o.mdNet)}</td><td class="n">2억원 미만</td><td>${o.mdNet<2e8?'<span class="ok">부양능력 없음</span>':'<span class="no">있음</span>'}</td></tr></table><p class="muted">혼인한 딸·사위는 소득·부동산은 보지 않고 금융재산만 봅니다.</p>`;
+      } else {
+        h+=`<table><tr><th>구분</th><th>값</th><th>기준</th><th>판정</th></tr>`;
+        h+=`<tr><td>소득</td><td class="n">${W(o.inc)}</td><td class="n">${W(o.incT)}${o.vulnUsed?' (취약 완화)':''}</td><td>${o.incPass?'<span class="ok">미만</span>':'<span class="no">이상</span>'}</td></tr>`;
+        h+=`<tr><td>재산(소득환산)</td><td class="n">${W(o.env)}</td><td class="n">${W(o.assetT)}</td><td>${o.assetPass?'<span class="ok">미만</span>':'<span class="no">이상</span>'}</td></tr></table>`;
+        h+=`<p class="muted">부양의무자 재산 소득환산: 기본재산액 ${W(BASIC_OB[o.region]*10000)}·부채 차감 후 주거 1.04%·그 외 2.08%. 소득·재산 모두 기준 미만이어야 '부양능력 없음'.</p>`;
+      }
+      const concl = o.waived?'가구특성상 부양의무자 미적용 → 통과':(!o.able?'부양능력 없음 → 통과':(o.cant?'부양능력 있으나 실제 부양 불가 → 심사 구제 가능':'부양능력 있음 → 결격사유 없으면 미충족'));
+      h+=`<p><b>결과: ${concl}</b></p>`;
+    });
+    h+=`<p>${L.medBlock?`<b class="no">현재 ${(L.blockers||[]).join(', ')} 부양의무자로 의료급여가 제한될 수 있습니다.</b> '부양을 받을 수 없는 경우'(거부·기피, 가족관계 단절, 해외 1년 이상, 파산 등)에 해당하면 소명하세요. <span class="cite">(p.206~208)</span>`:`<b class="ok">부양의무자 요건은 문제 없음.</b>`}</p>`;
+  }
+  const pj=L.proj;
+  if(pj && !pj.none){
+    h+=`<h2>6. 예상 통과 시점 (추정)</h2>`;
+    h+=`<p class="muted">증여재산의 매월 자연적 소비를 반영해, 다른 소득·재산이 지금과 같다고 볼 때의 추정입니다. 미래 중위소득은 2026년 값으로 고정(보수적)했습니다.</p>`;
+    h+=`<table><tr><th>급여</th><th>현재</th><th>예상 통과 시점</th></tr>`;
+    const row=(lbl,failNow,k,floorOk)=>{ let v; if(!failNow)v='이미 충족'; else if(k!==null&&k!==undefined)v=fmtWhen(k); else if(!floorOk)v='증여재산 소진으로도 미도달'; else v='15년 내 미도달'; return `<tr><td>${lbl}</td><td>${failNow?'미충족':'충족'}</td><td>${v}</td></tr>`; };
+    h+=row('생계급여',pj.saengFailNow,pj.saengK,pj.floorSaengOk);
+    h+=row('의료급여(소득인정액)',pj.uiryoFailNow,pj.uiryoK,pj.floorUiryoOk);
+    h+=`</table>`;
+  }
+  h+=`<h2>근거 및 유의사항</h2>`;
+  h+=`<p class="muted">보건복지부 「2026년 국민기초생활보장 사업안내」. 재산 소득환산·기본재산액·주거용 한도 p.165~169, 환산율·판정기준표 p.212~216, 처분·증여재산(자연적 소비) p.156~159, 재산범위 특례 p.167~169, 부양능력 판정 p.197~209, 금융재산 3개월 평균조사 p.144. 본 자료는 참고용이며 최종 판정은 보장기관 공적조사로 확정됩니다.</p>`;
+  h+=`<div class="sig">신청인 : __________________ (서명)　　작성일 : ${dstr}</div>`;
+  return h;
+}
+var DOC_TITLE='기초생활수급최종진단서'; var PREV_TITLE=document.title;
+function showDoc(){ const html=genDoc(); if(html==null)return; $('docPaper').innerHTML=html; $('docOverlay').style.display='block'; document.body.style.overflow='hidden'; PREV_TITLE=document.title; document.title=DOC_TITLE; window.scrollTo(0,0); }
+function hideDoc(){ $('docOverlay').style.display='none'; document.body.style.overflow=''; document.title=PREV_TITLE; }
+if($('btnDoc')) $('btnDoc').onclick=showDoc;
+if($('docClose')) $('docClose').onclick=hideDoc;
+if($('docPrint')) $('docPrint').onclick=()=>{ document.title=DOC_TITLE; window.print(); };
+
+// 계산기 식구 수 기본값을 본인 가구 식구 수와 맞춤(본인 가구 선택 시 자동 동기화)
+if($('giftSize')&&$('hSize'))$('giftSize').value=$('hSize').value;
+if($('hSize'))$('hSize').addEventListener('change',()=>{ if($('giftWho')&&$('giftWho').value==='self')$('giftSize').value=$('hSize').value; });
+document.addEventListener('input',calc);
+document.addEventListener('change',calc);
+addObligor();
+if($('giftList')&&!document.querySelector('.giftcard')) addGiftRow();
+</script>
+</body>
+</html>

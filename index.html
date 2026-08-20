@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- ▼▼ 사이트 이름·소개를 여기서 바꾸세요 ▼▼ -->
+<title>생활에 도움이 되는 프로그램</title>
+<meta name="description" content="생활에 도움이 되는 무료 프로그램 모음. 설치·회원가입 없이 링크만 열면 바로 사용, 정보는 내 기기에서만 계산됩니다.">
+<style>
+  :root{--bg:#eef1f5;--card:#fff;--ink:#18202c;--muted:#5c6675;--line:#e2e7ee;--brand:#1f4f8f;--accent:#2f6f5b;--chip:#eef2f7;}
+  @media (prefers-color-scheme:dark){:root{--bg:#0e1319;--card:#161d27;--ink:#e9edf3;--muted:#98a4b3;--line:#28313d;--chip:#1d2530;--brand:#5b9be8;}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic",sans-serif;line-height:1.6;-webkit-text-size-adjust:100%}
+  .wrap{max-width:900px;margin:0 auto;padding:26px 16px 70px}
+  header{margin-bottom:14px}
+  h1{font-size:24px;margin:0 0 4px}
+  .tag-brand{display:inline-block;font-size:11.5px;font-weight:800;color:#fff;background:var(--brand);border-radius:999px;padding:3px 10px;margin-bottom:8px}
+  .lead{color:var(--muted);font-size:14px;margin:2px 0 0}
+  .safe{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+  .safe span{font-size:12px;background:var(--chip);color:var(--muted);border-radius:999px;padding:4px 10px}
+  .search{width:100%;margin:18px 0 6px;padding:12px 14px;font-size:15px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink)}
+  .cat{font-size:13px;font-weight:800;color:var(--muted);margin:22px 2px 8px;letter-spacing:.02em}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 16px 14px;display:flex;flex-direction:column;box-shadow:0 1px 2px rgba(20,30,50,.04)}
+  .ico{font-size:26px;line-height:1}
+  .card h3{font-size:16px;margin:8px 0 4px}
+  .card p{font-size:13px;color:var(--muted);margin:0 0 10px;flex:1}
+  .tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
+  .tags i{font-style:normal;font-size:11px;background:var(--chip);color:var(--muted);border-radius:6px;padding:2px 7px}
+  .row{display:flex;gap:8px;align-items:center}
+  .btn{flex:1;text-align:center;text-decoration:none;font-weight:800;font-size:14px;border-radius:10px;padding:10px;background:var(--brand);color:#fff}
+  .btn.dl{flex:0 0 auto;background:transparent;color:var(--brand);border:1px solid var(--brand);padding:10px 12px}
+  .upd{font-size:11px;color:var(--muted);margin-top:8px}
+  .empty{color:var(--muted);font-size:14px;padding:30px 0;text-align:center}
+  footer{margin-top:36px;border-top:1px solid var(--line);padding-top:16px;color:var(--muted);font-size:12.5px;line-height:1.8}
+  footer b{color:var(--ink)}
+  a.plain{color:var(--brand)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="tag-brand">무료 · 설치 없음</span>
+    <!-- ▼ 사이트 이름·소개 문구를 바꾸세요 ▼ -->
+    <h1>생활에 도움이 되는 프로그램</h1>
+    <p class="lead">복잡한 제도를 스스로 확인하는 무료 도구들입니다. <b>설치·회원가입 없이</b> 링크만 열면 바로 쓰고, 입력한 정보는 <b>내 기기에서만 계산</b>되어 어디로도 전송되지 않아요.</p>
+    <div class="safe">
+      <span>🆓 완전 무료</span><span>🔒 개인정보 안전(서버 전송 없음)</span><span>📱 폰·PC 모두</span><span>ℹ️ 참고용 (최종 판단은 담당기관)</span>
+    </div>
+  </header>
+
+  <input id="q" class="search" type="search" placeholder="🔎 이름·키워드로 찾기 (예: 기초수급, 의료급여)">
+  <div id="list"></div>
+
+  <footer>
+    <p>ℹ️ 이 사이트의 도구들은 <b>참고용 자가진단</b>입니다. 실제 신청·판정은 관할 기관(주민센터·시군구 등)의 공적 조사로 확정됩니다. 공식 기관이 운영하는 사이트가 아닙니다.</p>
+    <!-- ▼ 만든이·연락·안내를 바꾸세요 ▼ -->
+    <p>만든이: <b>이충관 · 컴매니저</b></p>
+    <p>문의: 이메일 <a class="plain" href="mailto:hey7995@gmail.com">hey7995@gmail.com</a> · 카톡 ID <b>hey7995</b> · 블로그 <a class="plain" href="https://blog.naver.com/hey7995" target="_blank" rel="noopener">blog.naver.com/hey7995</a> · 홈페이지 <a class="plain" href="https://helpcomkr.com" target="_blank" rel="noopener">helpcomkr.com</a></p>
+    <p class="upd" id="foot"></p>
+  </footer>
+</div>
+
+<script src="programs.js"></script>
+<script>
+  var LIST=document.getElementById('list'), Q=document.getElementById('q');
+  var DATA=(window.PROGRAMS||[]).slice();
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function card(p){
+    var tags=(p.tags||[]).map(function(t){return '<i>'+esc(t)+'</i>';}).join('');
+    var dl=p.file?'<a class="btn dl" href="'+esc(p.file)+'" download title="파일 내려받기">⬇</a>':'';
+    return '<div class="card">'+
+      '<div class="ico">'+esc(p.icon||'🧰')+'</div>'+
+      '<h3>'+esc(p.name)+'</h3>'+
+      '<p>'+esc(p.desc)+'</p>'+
+      (tags?'<div class="tags">'+tags+'</div>':'')+
+      '<div class="row">'+
+        (p.file?'<a class="btn" href="'+esc(p.file)+'">열기 · 사용하기</a>':'<span class="btn" style="background:var(--muted)">준비 중</span>')+
+        dl+
+      '</div>'+
+      (p.updated?'<div class="upd">갱신 '+esc(p.updated)+'</div>':'')+
+    '</div>';
+  }
+  function render(items){
+    if(!items.length){ LIST.innerHTML='<div class="empty">해당하는 도구가 없어요.</div>'; return; }
+    // 분류별 묶기
+    var groups={}, order=[];
+    items.forEach(function(p){var c=p.category||'기타'; if(!groups[c]){groups[c]=[];order.push(c);} groups[c].push(p);});
+    LIST.innerHTML=order.map(function(c){
+      return '<div class="cat">'+esc(c)+'</div><div class="grid">'+groups[c].map(card).join('')+'</div>';
+    }).join('');
+  }
+  function filter(){
+    var k=(Q.value||'').trim().toLowerCase();
+    if(!k){ render(DATA); return; }
+    render(DATA.filter(function(p){
+      var hay=[p.name,p.desc,p.category].concat(p.tags||[]).join(' ').toLowerCase();
+      return hay.indexOf(k)>=0;
+    }));
+  }
+  Q.addEventListener('input',filter);
+  render(DATA);
+  document.getElementById('foot').textContent='등록된 도구 '+DATA.length+'개';
+</script>
+</body>
+</html>
