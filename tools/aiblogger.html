@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<!--PROGRAM
+name: AI만능블로거
+desc: 사진 몇 장과 간단한 정보만 넣으면 AI가 블로그 글·썸네일을 자동으로 만들어 주는 사장님용 홍보 글쓰기 프로그램. 음성 입력, 네이버·워드프레스 발행, 업종별 말투까지. 7일 무료 체험.
+category: 업무·기타
+icon: ✍️
+tags: 블로그,AI글쓰기,자영업홍보,썸네일,네이버,워드프레스
+price: 무료 체험 후 유료
+download: https://github.com/hey7995/hey7995.github.io/releases/download/aiblogger-1.7/AImanblogger_Setup_1.7.exe
+file: tools/aiblogger.html
+updated: 2026-08
+PROGRAM-->
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI만능블로거 — 사진만 넣으면 블로그 글이 뚝딱</title>
+<meta name="description" content="컴퓨터수리·인테리어 등 사장님을 위한 AI 블로그 글쓰기 프로그램. 사진과 간단한 정보만 넣으면 글·썸네일이 자동으로 만들어지고, 음성 입력과 네이버·워드프레스 발행까지 됩니다. 7일 무료 체험(카드등록·API키 없이).">
+<style>
+  :root{--bg:#eef1f5;--card:#fff;--ink:#18202c;--muted:#5c6675;--line:#e2e7ee;--brand:#2f6f5b;--brand2:#3d7dd8;--ok:#1f9d63;--okbg:#e8f6ef;--warn:#b5820a;--warnbg:#fdf3df;--chip:#eef2f7;--shadow:0 1px 3px rgba(20,30,50,.06);}
+  @media (prefers-color-scheme:dark){:root{--bg:#0e1319;--card:#161d27;--ink:#e9edf3;--muted:#98a4b3;--line:#28313d;--okbg:#123021;--warnbg:#2d2610;--chip:#1d2530;--shadow:0 1px 3px rgba(0,0,0,.3);}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic",sans-serif;line-height:1.65;-webkit-text-size-adjust:100%}
+  .wrap{max-width:840px;margin:0 auto;padding:22px 16px 70px}
+  a{color:var(--brand2)}
+  .back{display:inline-block;font-size:13px;color:var(--muted);text-decoration:none;margin-bottom:14px}
+  .back:hover{color:var(--brand2)}
+  /* Hero */
+  .hero{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:26px 22px;box-shadow:var(--shadow);text-align:center}
+  .hero .ico{font-size:44px;line-height:1}
+  .hero h1{font-size:26px;margin:12px 0 6px;letter-spacing:-.4px}
+  .hero .tag{color:var(--muted);font-size:15px;margin:0 auto;max-width:560px}
+  .badges{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:16px 0 4px}
+  .badge{font-size:12px;font-weight:800;border-radius:999px;padding:5px 12px}
+  .badge.free{background:var(--okbg);color:var(--ok)}
+  .badge.plain{background:var(--chip);color:var(--muted)}
+  .cta{display:inline-flex;align-items:center;gap:8px;background:var(--brand2);color:#fff;font-weight:800;font-size:16px;text-decoration:none;border-radius:12px;padding:13px 26px;margin-top:16px;box-shadow:0 2px 8px rgba(61,125,216,.3)}
+  .cta:hover{filter:brightness(1.05)}
+  .cta.sm{font-size:14px;padding:11px 20px}
+  .os{display:block;color:var(--muted);font-size:12px;margin-top:9px}
+  /* Cards / sections */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin:16px 0;box-shadow:var(--shadow)}
+  .card h2{font-size:18px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
+  .who{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px}
+  @media(max-width:560px){.who{grid-template-columns:1fr}}
+  .who div{background:var(--chip);border-radius:10px;padding:11px 13px;font-size:14px}
+  .feat{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:560px){.feat{grid-template-columns:1fr}}
+  .feat .f{display:flex;gap:12px;align-items:flex-start}
+  .feat .fi{font-size:26px;line-height:1;flex:0 0 auto}
+  .feat .ft{font-weight:800;font-size:15px;margin:0 0 3px}
+  .feat .fd{font-size:13px;color:var(--muted);margin:0}
+  .steps{counter-reset:s;margin:0;padding:0;list-style:none}
+  .steps li{counter-increment:s;position:relative;padding:9px 0 9px 40px;border-bottom:1px dashed var(--line);font-size:14px}
+  .steps li:last-child{border-bottom:0}
+  .steps li::before{content:counter(s);position:absolute;left:0;top:8px;width:26px;height:26px;border-radius:50%;background:var(--brand);color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center}
+  .trial{background:var(--okbg);border:1px solid var(--ok);border-radius:14px;padding:16px 18px}
+  .trial h2{color:var(--ok)}
+  .trial ul{margin:6px 0 0;padding-left:20px;font-size:14px}
+  .trial li{margin:4px 0}
+  .note{background:var(--warnbg);border:1px solid var(--warn);border-radius:12px;padding:12px 14px;font-size:13px;margin-top:12px}
+  .buy{text-align:center}
+  .buy .price{font-size:15px;color:var(--muted);margin:0 0 12px}
+  .contact{display:flex;flex-direction:column;gap:7px;align-items:center;font-size:15px;margin:0 0 16px}
+  .contact a{text-decoration:none;color:var(--brand2)}
+  .foot{font-size:12px;color:var(--muted);border-top:1px solid var(--line);margin-top:26px;padding-top:14px;line-height:1.7;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../index.html">← 프로그램 목록으로</a>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="ico">✍️</div>
+    <h1>AI만능블로거</h1>
+    <p class="tag">사진 몇 장과 간단한 정보만 넣으면, <b>AI가 블로그 글과 썸네일을 자동으로</b> 만들어 줍니다. 컴퓨터수리·인테리어 등 <b>바쁜 사장님의 온라인 홍보</b>를 대신합니다.</p>
+    <div class="badges">
+      <span class="badge free">7일 무료 체험</span>
+      <span class="badge plain">카드등록·API키 없이 바로</span>
+      <span class="badge plain">Windows 설치형</span>
+    </div>
+    <a class="cta" href="https://github.com/hey7995/hey7995.github.io/releases/download/aiblogger-1.7/AImanblogger_Setup_1.7.exe" rel="noopener">⬇ 무료로 시작하기</a>
+    <span class="os">Windows 10 · 11 · 설치 후 바탕화면 바로가기로 실행</span>
+  </div>
+
+  <!-- 이런 분께 -->
+  <div class="card">
+    <h2>🙌 이런 사장님께</h2>
+    <div class="who">
+      <div>블로그로 가게를 알리고 싶은데 <b>글쓰기가 막막한</b> 분</div>
+      <div>바빠서 <b>홍보 글 쓸 시간이 없는</b> 자영업·소상공인</div>
+      <div>사진은 찍어두는데 <b>글로 정리가 안 되는</b> 분</div>
+      <div><b>네이버 블로그·홈페이지</b>에 꾸준히 올리고 싶은 분</div>
+    </div>
+  </div>
+
+  <!-- 주요 기능 -->
+  <div class="card">
+    <h2>✨ 주요 기능</h2>
+    <div class="feat">
+      <div class="f"><div class="fi">🤖</div><div><p class="ft">사진 + 정보 → 글 자동 완성</p><p class="fd">사진과 몇 가지 정보만 넣으면 AI가 블로그 글을 통째로 써 줍니다.</p></div></div>
+      <div class="f"><div class="fi">🖼️</div><div><p class="ft">썸네일 자동 제작</p><p class="fd">제목·키워드가 들어간 대표 이미지를 자동으로 만들어 줍니다.</p></div></div>
+      <div class="f"><div class="fi">🎤</div><div><p class="ft">말로 입력</p><p class="fd">타이핑 대신 말하면 받아써 줍니다. 체험 중엔 무료.</p></div></div>
+      <div class="f"><div class="fi">🚀</div><div><p class="ft">네이버·워드프레스 발행</p><p class="fd">완성한 글을 네이버 서식이나 홈페이지로 바로 올릴 수 있어요.</p></div></div>
+      <div class="f"><div class="fi">🗂️</div><div><p class="ft">업종별 말투</p><p class="fd">컴퓨터수리·인테리어 등 업종에 맞는 표현·구성을 골라 씁니다.</p></div></div>
+      <div class="f"><div class="fi">📷</div><div><p class="ft">사진 자동 배치</p><p class="fd">소제목마다 알맞은 사진이 자동으로 들어가 글이 보기 좋아집니다.</p></div></div>
+    </div>
+  </div>
+
+  <!-- 사용 순서 -->
+  <div class="card">
+    <h2>🧭 이렇게 씁니다</h2>
+    <ol class="steps">
+      <li>프로그램을 내려받아 설치합니다 (한 번만).</li>
+      <li>업종을 고르고, 사진과 간단한 정보를 넣습니다.</li>
+      <li>버튼 한 번 — AI가 글과 썸네일을 만들어 줍니다.</li>
+      <li>내용을 살짝 다듬고, 네이버·홈페이지에 올립니다.</li>
+    </ol>
+  </div>
+
+  <!-- 무료 체험 -->
+  <div class="card trial">
+    <h2>🎁 7일 무료 체험</h2>
+    <ul>
+      <li><b>카드 등록·회원가입 없이</b> 바로 시작합니다.</li>
+      <li><b>API 키 없이도</b> 글쓰기·음성 받아쓰기가 무료로 됩니다(체험 기간 중).</li>
+      <li>7일 동안 실제 기능을 마음껏 써 보고 결정하세요.</li>
+    </ul>
+    <div class="note">ℹ️ 체험 기간(7일)이 끝나면 <b>정식 이용권을 구매해야 계속 사용할 수 있습니다.</b> 이용 조건·가격은 아래 문의처로 편하게 물어봐 주세요.</div>
+  </div>
+
+  <!-- 구매/문의 -->
+  <div class="card buy">
+    <h2 style="justify-content:center">💬 정식 이용 · 문의</h2>
+    <p class="price">7일 무료 체험 후 유료입니다. 이용 조건·가격은 편하게 문의해 주세요.</p>
+    <div class="contact">
+      <div>💬 카카오톡 ID <b>hey7995</b></div>
+      <div>📞 <a href="tel:043-277-7995">043-277-7995</a></div>
+      <div>✉️ <a href="mailto:hey7995@gmail.com">hey7995@gmail.com</a></div>
+    </div>
+    <a class="cta sm" href="https://github.com/hey7995/hey7995.github.io/releases/download/aiblogger-1.7/AImanblogger_Setup_1.7.exe" rel="noopener" style="background:var(--brand)">⬇ 지금 내려받기</a>
+  </div>
+
+  <div class="foot">
+    AI만능블로거 · Windows 설치형 프로그램 · 생성된 글·이미지는 게시 전 확인 후 사용하세요.<br>
+    실제 발행 결과는 각 플랫폼(네이버·워드프레스 등)의 정책과 환경에 따라 달라질 수 있습니다.
+  </div>
+</div>
+</body>
+</html>
