@@ -14,16 +14,14 @@
   .wrap{max-width:900px;margin:0 auto;padding:26px 16px 70px}
   header{margin-bottom:14px}
   h1{font-size:24px;margin:0 0 4px}
-  .tag-brand{display:inline-block;font-size:11.5px;font-weight:800;color:#fff;background:var(--brand);border-radius:999px;padding:3px 10px;margin-bottom:8px}
   .lead{color:var(--muted);font-size:14px;margin:2px 0 0}
-  .safe{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
-  .safe span{font-size:12px;background:var(--chip);color:var(--muted);border-radius:999px;padding:4px 10px}
   .search{width:100%;margin:18px 0 6px;padding:12px 14px;font-size:15px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink)}
   .cat{font-size:13px;font-weight:800;color:var(--muted);margin:22px 2px 8px;letter-spacing:.02em}
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 16px 14px;display:flex;flex-direction:column;box-shadow:0 1px 2px rgba(20,30,50,.04)}
   .chead{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
   .ico{font-size:26px;line-height:1}
+  .ico img{width:36px;height:36px;object-fit:contain;display:block;margin:-4px 0 -2px -2px}
   .price{font-size:11px;font-weight:800;border-radius:999px;padding:3px 10px;white-space:nowrap;flex:0 0 auto}
   .price.free{background:rgba(31,157,99,.14);color:#1f9d63}
   .price.paid{background:rgba(61,125,216,.16);color:#3d7dd8}
@@ -37,6 +35,16 @@
   .upd{font-size:11px;color:var(--muted);margin-top:8px}
   .kind{font-size:11.5px;color:var(--accent);font-weight:700;margin-top:8px}
   .empty{color:var(--muted);font-size:14px;padding:30px 0;text-align:center}
+  /* ▼ 최신 프로그램 가로 줄 */
+  .latest{display:flex;gap:12px;overflow-x:auto;padding:2px 2px 10px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
+  .latest .card{scroll-snap-align:start;flex:0 0 auto;width:242px}
+  @media(min-width:820px){.latest{overflow:visible}.latest .card{flex:1 1 0;width:auto}}
+  /* ▼ 분류 메뉴(칩) */
+  .catmenu{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 6px}
+  .catbtn{font-size:13px;font-weight:800;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:8px 14px;cursor:pointer}
+  .catbtn:hover{border-color:var(--brand)}
+  .catbtn.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .hint2{color:var(--muted);font-size:13.5px;padding:14px 4px;line-height:1.7}
   footer{margin-top:36px;border-top:1px solid var(--line);padding-top:16px;color:var(--muted);font-size:12.5px;line-height:1.8}
   footer b{color:var(--ink)}
   a.plain{color:var(--brand)}
@@ -47,10 +55,18 @@
   <header>
     <!-- ▼ 사이트 이름·소개 문구를 바꾸세요 ▼ -->
     <h1>생활에 도움이 되는 프로그램</h1>
-    <p class="lead">생활과 업무에 도움이 되는 프로그램을 모았습니다. <b>웹에서 바로 쓰는 도구</b>부터 <b>내려받아 설치하는 프로그램</b>까지, 무료도 유료(무료 체험)도 있어요.</p>
+    <p class="lead">필요해서 만들어 봤는데, <b>함께 쓰면 좋을 것 같아서</b> 공유합니다.</p>
   </header>
 
-  <input id="q" class="search" type="search" placeholder="🔎 이름·키워드로 찾기 (예: 블로그, 기초수급)">
+  <input id="q" class="search" type="search" placeholder="🔎 이름·키워드로 찾기 (예: 블로그, 기초수급, 아바타)">
+
+  <!-- 최신 프로그램 (가로 한 줄) -->
+  <div class="cat">🆕 최신 프로그램</div>
+  <div class="latest" id="latest"></div>
+
+  <!-- 분류별 보기 (메뉴) -->
+  <div class="cat">🗂️ 분류별 보기</div>
+  <div class="catmenu" id="catmenu"></div>
   <div id="list"></div>
 
   <footer>
@@ -64,9 +80,13 @@
 
 <script src="programs.js"></script>
 <script>
-  var LIST=document.getElementById('list'), Q=document.getElementById('q');
+  var LIST=document.getElementById('list'), Q=document.getElementById('q'),
+      LATEST=document.getElementById('latest'), MENU=document.getElementById('catmenu');
   var DATA=(window.PROGRAMS||[]).slice();
+  var selectedCat=null; // null=선택 전, '__ALL__'=전체, 그 외=분류명
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function byNewest(a,b){return (b.updated||'').localeCompare(a.updated||'')||(a.name||'').localeCompare(b.name||'');}
+
   function card(p){
     var tags=(p.tags||[]).map(function(t){return '<i>'+esc(t)+'</i>';}).join('');
     var price=p.price?'<span class="price '+(/유료|체험/.test(p.price)?'paid':'free')+'">'+esc(p.price)+'</span>':'';
@@ -81,8 +101,11 @@
     } else {
       actions='<span class="btn" style="background:var(--muted)">준비 중</span>';
     }
+    var ico=/\.(png|jpe?g|svg|webp)(\?.*)?$/i.test(p.icon||'')
+      ? '<div class="ico"><img src="'+esc(p.icon)+'" alt=""></div>'
+      : '<div class="ico">'+esc(p.icon||'🧰')+'</div>';
     return '<div class="card">'+
-      '<div class="chead"><div class="ico">'+esc(p.icon||'🧰')+'</div>'+price+'</div>'+
+      '<div class="chead">'+ico+price+'</div>'+
       '<h3>'+esc(p.name)+'</h3>'+
       '<p>'+esc(p.desc)+'</p>'+
       (tags?'<div class="tags">'+tags+'</div>':'')+
@@ -91,25 +114,69 @@
       (p.updated?'<div class="upd">갱신 '+esc(p.updated)+'</div>':'')+
     '</div>';
   }
-  function render(items){
-    if(!items.length){ LIST.innerHTML='<div class="empty">해당하는 도구가 없어요.</div>'; return; }
-    // 분류별 묶기
+
+  // 분류 목록(최신 등록 순)
+  function categories(){
+    var seen={}, order=[];
+    DATA.slice().sort(byNewest).forEach(function(p){var c=p.category||'기타'; if(!seen[c]){seen[c]=1;order.push(c);}});
+    return order;
+  }
+
+  // 최신 프로그램 가로 줄 (최신순 4개)
+  function renderLatest(){
+    var items=DATA.slice().sort(byNewest).slice(0,4);
+    LATEST.innerHTML=items.length?items.map(card).join(''):'<div class="hint2">아직 등록된 프로그램이 없어요.</div>';
+  }
+
+  // 분류 메뉴 칩
+  function renderMenu(){
+    var opts=[{k:'__ALL__',label:'전체'}].concat(categories().map(function(c){return {k:c,label:c};}));
+    MENU.innerHTML=opts.map(function(o){
+      return '<button class="catbtn'+(o.k===selectedCat?' on':'')+'" data-cat="'+esc(o.k)+'">'+esc(o.label)+'</button>';
+    }).join('');
+  }
+
+  // 분류명별로 묶어 카드 그리기
+  function groupHtml(items){
+    if(!items.length) return '<div class="empty">해당하는 도구가 없어요.</div>';
     var groups={}, order=[];
     items.forEach(function(p){var c=p.category||'기타'; if(!groups[c]){groups[c]=[];order.push(c);} groups[c].push(p);});
-    LIST.innerHTML=order.map(function(c){
+    return order.map(function(c){
       return '<div class="cat">'+esc(c)+'</div><div class="grid">'+groups[c].map(card).join('')+'</div>';
     }).join('');
   }
-  function filter(){
+
+  function renderList(){
     var k=(Q.value||'').trim().toLowerCase();
-    if(!k){ render(DATA); return; }
-    render(DATA.filter(function(p){
-      var hay=[p.name,p.desc,p.category].concat(p.tags||[]).join(' ').toLowerCase();
-      return hay.indexOf(k)>=0;
-    }));
+    if(k){ // 검색 모드 — 전체에서 찾기
+      selectedCat=null; renderMenu();
+      var res=DATA.filter(function(p){
+        var hay=[p.name,p.desc,p.category].concat(p.tags||[]).join(' ').toLowerCase();
+        return hay.indexOf(k)>=0;
+      }).sort(byNewest);
+      LIST.innerHTML=groupHtml(res);
+      return;
+    }
+    if(selectedCat==null){
+      LIST.innerHTML='<div class="hint2">👆 위는 <b>최신 프로그램</b>이에요. <b>분류</b>를 선택하면 그 종류의 프로그램을 볼 수 있어요.</div>';
+      return;
+    }
+    var items=(selectedCat==='__ALL__')
+      ? DATA.slice().sort(byNewest)
+      : DATA.filter(function(p){return (p.category||'기타')===selectedCat;}).sort(byNewest);
+    LIST.innerHTML=groupHtml(items);
   }
-  Q.addEventListener('input',filter);
-  render(DATA);
+
+  MENU.addEventListener('click',function(e){
+    var b=e.target.closest('.catbtn'); if(!b) return;
+    Q.value=''; selectedCat=b.getAttribute('data-cat');
+    renderMenu(); renderList();
+  });
+  Q.addEventListener('input',renderList);
+
+  renderLatest();
+  renderMenu();
+  renderList();
   document.getElementById('foot').textContent='등록된 도구 '+DATA.length+'개';
 </script>
 </body>
