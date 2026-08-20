@@ -43,6 +43,7 @@ const body = items.map(p =>
   `    category: ${JSON.stringify(p.category || '기타')},\n` +
   `    icon: ${JSON.stringify(p.icon || '🧰')},\n` +
   `    tags: [${(p.tags || []).map(t => JSON.stringify(t)).join(', ')}],\n` +
+  `    price: ${JSON.stringify(p.price || '')},\n` +
   `    file: ${JSON.stringify(p.file)},\n` +
   `    updated: ${JSON.stringify(p.updated || '')}\n` +
   '  }'

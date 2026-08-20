@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <!-- ▼▼ 사이트 이름·소개를 여기서 바꾸세요 ▼▼ -->
 <title>생활에 도움이 되는 프로그램</title>
-<meta name="description" content="생활에 도움이 되는 무료 프로그램 모음. 설치·회원가입 없이 링크만 열면 바로 사용, 정보는 내 기기에서만 계산됩니다.">
+<meta name="description" content="생활과 업무에 도움이 되는 프로그램 모음. 설치·회원가입 없이 링크로 바로 실행합니다. 프로그램마다 무료·유료(무료 체험)가 다르니 각 안내를 확인하세요.">
 <style>
   :root{--bg:#eef1f5;--card:#fff;--ink:#18202c;--muted:#5c6675;--line:#e2e7ee;--brand:#1f4f8f;--accent:#2f6f5b;--chip:#eef2f7;}
   @media (prefers-color-scheme:dark){:root{--bg:#0e1319;--card:#161d27;--ink:#e9edf3;--muted:#98a4b3;--line:#28313d;--chip:#1d2530;--brand:#5b9be8;}}
@@ -22,7 +22,11 @@
   .cat{font-size:13px;font-weight:800;color:var(--muted);margin:22px 2px 8px;letter-spacing:.02em}
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 16px 14px;display:flex;flex-direction:column;box-shadow:0 1px 2px rgba(20,30,50,.04)}
+  .chead{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
   .ico{font-size:26px;line-height:1}
+  .price{font-size:11px;font-weight:800;border-radius:999px;padding:3px 10px;white-space:nowrap;flex:0 0 auto}
+  .price.free{background:rgba(31,157,99,.14);color:#1f9d63}
+  .price.paid{background:rgba(61,125,216,.16);color:#3d7dd8}
   .card h3{font-size:16px;margin:8px 0 4px}
   .card p{font-size:13px;color:var(--muted);margin:0 0 10px;flex:1}
   .tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
@@ -40,12 +44,12 @@
 <body>
 <div class="wrap">
   <header>
-    <span class="tag-brand">무료 · 설치 없음</span>
+    <span class="tag-brand">설치 없이 · 링크로 바로</span>
     <!-- ▼ 사이트 이름·소개 문구를 바꾸세요 ▼ -->
     <h1>생활에 도움이 되는 프로그램</h1>
-    <p class="lead">복잡한 제도를 스스로 확인하는 무료 도구들입니다. <b>설치·회원가입 없이</b> 링크만 열면 바로 쓰고, 입력한 정보는 <b>내 기기에서만 계산</b>되어 어디로도 전송되지 않아요.</p>
+    <p class="lead">생활과 업무에 도움이 되는 프로그램을 모았습니다. 설치·회원가입 없이 <b>링크만 열면 바로 실행</b>돼요. <b>무료로 쓰는 도구</b>도 있고, <b>무료 체험 후 이용</b>하는 프로그램도 있어요 — 각 카드의 배지와 안내를 확인하세요.</p>
     <div class="safe">
-      <span>🆓 완전 무료</span><span>🔒 개인정보 안전(서버 전송 없음)</span><span>📱 폰·PC 모두</span><span>ℹ️ 참고용 (최종 판단은 담당기관)</span>
+      <span>🔗 설치 없이 링크로 실행</span><span>📱 폰·PC 모두</span><span>🏷️ 프로그램마다 무료·유료 표시</span>
     </div>
   </header>
 
@@ -53,7 +57,7 @@
   <div id="list"></div>
 
   <footer>
-    <p>ℹ️ 이 사이트의 도구들은 <b>참고용 자가진단</b>입니다. 실제 신청·판정은 관할 기관(주민센터·시군구 등)의 공적 조사로 확정됩니다. 공식 기관이 운영하는 사이트가 아닙니다.</p>
+    <p>ℹ️ 프로그램마다 <b>이용조건(무료·유료)과 유의사항</b>이 다르니 각 프로그램의 안내를 확인하세요. 기초생활수급 자가진단 등 <b>진단성 도구의 결과는 참고용</b>이며, 실제 신청·판정은 관할 기관(주민센터·시군구 등)의 공적 조사로 확정됩니다. 공식 기관이 운영하는 사이트가 아닙니다.</p>
     <!-- ▼ 만든이·연락·안내를 바꾸세요 ▼ -->
     <p>만든이: <b>이충관 · 컴매니저</b></p>
     <p>문의: 이메일 <a class="plain" href="mailto:hey7995@gmail.com">hey7995@gmail.com</a> · 카톡 ID <b>hey7995</b> · 블로그 <a class="plain" href="https://blog.naver.com/hey7995" target="_blank" rel="noopener">blog.naver.com/hey7995</a> · 홈페이지 <a class="plain" href="https://helpcomkr.com" target="_blank" rel="noopener">helpcomkr.com</a></p>
@@ -69,8 +73,9 @@
   function card(p){
     var tags=(p.tags||[]).map(function(t){return '<i>'+esc(t)+'</i>';}).join('');
     var dl=p.file?'<a class="btn dl" href="'+esc(p.file)+'" download title="파일 내려받기">⬇</a>':'';
+    var price=p.price?'<span class="price '+(/유료|체험/.test(p.price)?'paid':'free')+'">'+esc(p.price)+'</span>':'';
     return '<div class="card">'+
-      '<div class="ico">'+esc(p.icon||'🧰')+'</div>'+
+      '<div class="chead"><div class="ico">'+esc(p.icon||'🧰')+'</div>'+price+'</div>'+
       '<h3>'+esc(p.name)+'</h3>'+
       '<p>'+esc(p.desc)+'</p>'+
       (tags?'<div class="tags">'+tags+'</div>':'')+

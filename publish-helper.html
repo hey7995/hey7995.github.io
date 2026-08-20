@@ -42,6 +42,8 @@
       <div><label>분류</label><input id="f_cat" placeholder="예: 복지·생활" value="복지·생활"></div>
       <div><label>갱신 시점</label><input id="f_upd" placeholder="예: 2026-08"></div>
     </div>
+    <label>가격 배지 <span class="u">홈페이지 카드에 표시 · 예: 무료 / 무료 체험 후 유료</span></label>
+    <input id="f_price" placeholder="무료" value="무료">
     <div class="grid">
       <div><label>태그 <span class="u">쉼표로 구분</span></label><input id="f_tags" placeholder="기초수급, 의료급여"></div>
       <div><label>파일 경로 <span class="u">tools/…</span></label><input id="f_file" placeholder="tools/파일이름.html"></div>
@@ -77,7 +79,7 @@
 </div>
 
 <script>
-  var ids=['f_name','f_icon','f_desc','f_cat','f_upd','f_tags','f_file','f_site','f_feat'];
+  var ids=['f_name','f_icon','f_desc','f_cat','f_upd','f_tags','f_file','f_site','f_feat','f_price'];
   function g(id){return (document.getElementById(id).value||'').trim();}
   function tagsArr(){return g('f_tags').split(',').map(function(s){return s.trim();}).filter(Boolean);}
   function featArr(){return g('f_feat').split(',').map(function(s){return s.trim();}).filter(Boolean);}
@@ -85,6 +87,8 @@
   function build(){
     var name=g('f_name'), icon=g('f_icon')||'🧰', desc=g('f_desc'), cat=g('f_cat')||'기타',
         upd=g('f_upd'), file=g('f_file'), site=g('f_site'), tags=tagsArr(), feat=featArr();
+    var price=g('f_price')||'무료';
+    var isPaid=/유료|체험/.test(price);   // '무료 체험 후 유료' 등은 완전 무료 문구를 쓰지 않음
     var link = site ? (site.replace(/\/+$/,'') + '/' + (file? (file+'').replace(/^\/+/,'') : '')) : (file||'(홈페이지 주소를 넣으면 링크가 자동으로 채워져요)');
     // ① programs.js entry
     document.getElementById('o1').textContent =
@@ -94,6 +98,7 @@
       '    category: '+q(cat)+',\n'+
       '    icon: '+q(icon)+',\n'+
       '    tags: ['+tags.map(q).join(', ')+'],\n'+
+      '    price: '+q(price)+',\n'+
       '    file: '+q(file)+',\n'+
       '    updated: '+q(upd)+'\n'+
       '  }';
@@ -105,39 +110,47 @@
       'category: '+cat+'\n'+
       'icon: '+icon+'\n'+
       'tags: '+tags.join(',')+'\n'+
+      'price: '+price+'\n'+
       'file: '+file+'\n'+
       'updated: '+upd+'\n'+
       'PROGRAM-->';
     // ③ blog draft
     var featLines = feat.length ? feat.map(function(f){return '· '+f;}).join('\n') : '· (핵심 기능을 적어주세요)';
+    var blogBenefit = isPaid
+      ? '· 이용 안내 — '+price+'.\n'+
+        '· 폰·컴퓨터 어디서나 — 링크만 누르면 바로 실행돼요.\n'
+      : '· 완전 무료 — 설치도, 회원가입도 필요 없어요.\n'+
+        '· 개인정보 안전 — 입력한 내용은 내 기기(브라우저)에서만 계산되고 서버로 전송되지 않습니다.\n'+
+        '· 폰·컴퓨터 어디서나 — 링크만 누르면 바로 실행돼요.\n';
     document.getElementById('o3').textContent =
       '['+(name||'프로그램 이름')+'] '+(desc||'한 줄 소개')+'\n\n'+
       '안녕하세요. 오늘은 '+(name||'이 도구')+'를 소개합니다.\n'+
       (desc?desc+'\n':'')+'\n'+
       '▶ 바로 사용하기\n'+link+'\n\n'+
-      '▶ 이런 점이 좋아요\n'+featLines+'\n'+
-      '· 완전 무료 — 설치도, 회원가입도 필요 없어요.\n'+
-      '· 개인정보 안전 — 입력한 내용은 내 기기(브라우저)에서만 계산되고 서버로 전송되지 않습니다.\n'+
-      '· 폰·컴퓨터 어디서나 — 링크만 누르면 바로 실행돼요.\n\n'+
+      '▶ 이런 점이 좋아요\n'+featLines+'\n'+blogBenefit+'\n'+
       '▶ 사용법 (아주 간단해요)\n'+
       '1) 위 링크를 누르세요.\n'+
       '2) 화면 안내에 따라 내 상황을 넣으세요.\n'+
       '3) 결과와 안내를 확인하세요. (필요하면 결과를 파일로 저장·출력할 수 있어요.)\n\n'+
       '▶ 꼭 알아두세요\n'+
-      '이 도구는 참고용입니다. 최종 판단·신청은 관할 기관(주민센터·시군구 등)에서 확정됩니다. 공식 기관 사이트가 아니며, 무료로 제공됩니다.\n\n'+
-      '#'+(tags.length?tags.join(' #'):'무료도구')+' #무료 #생활정보';
+      '이 프로그램의 이용조건은 '+price+'입니다. 자세한 유의사항은 프로그램 안내를 확인하세요. 진단성 도구의 결과는 참고용이며, 최종 판단·신청은 관할 기관에서 확정됩니다. 공식 기관이 운영하는 사이트가 아닙니다.\n\n'+
+      '#'+(tags.length?tags.join(' #'):'생활프로그램')+(isPaid?'':' #무료')+' #생활정보';
     // ④ youtube
+    var ytBenefit = isPaid
+      ? '· 이용 안내: '+price+'\n'+
+        '· 폰·PC 모두 링크만 열면 바로 사용\n'
+      : '· 완전 무료, 설치·회원가입 없음\n'+
+        '· 입력 정보는 내 기기에서만 계산(개인정보 안전)\n'+
+        '· 폰·PC 모두 링크만 열면 바로 사용\n';
     document.getElementById('o4').textContent =
-      '[제목]\n'+(name||'프로그램 이름')+' — '+(desc? desc.slice(0,40) : '무료로 직접 확인하는 방법')+' (무료)\n\n'+
+      '[제목]\n'+(name||'프로그램 이름')+' — '+(desc? desc.slice(0,40) : '직접 확인하는 방법')+(isPaid?'':' (무료)')+'\n\n'+
       '[설명]\n'+
       (desc||'')+'\n\n'+
       '▶ 바로 사용하기: '+link+'\n\n'+
       '이 영상은 '+(name||'이 도구')+'의 사용법을 안내합니다.\n'+
-      '· 완전 무료, 설치·회원가입 없음\n'+
-      '· 입력 정보는 내 기기에서만 계산(개인정보 안전)\n'+
-      '· 폰·PC 모두 링크만 열면 바로 사용\n\n'+
-      '※ 참고용 도구이며, 최종 판단·신청은 관할 기관에서 확정됩니다.\n\n'+
-      '[해시태그]\n#'+(tags.length?tags.join(' #'):'무료도구')+' #무료 #사용법';
+      ytBenefit+'\n'+
+      '※ 진단성 도구의 결과는 참고용이며, 최종 판단·신청은 관할 기관에서 확정됩니다. 이용조건: '+price+'.\n\n'+
+      '[해시태그]\n#'+(tags.length?tags.join(' #'):'생활프로그램')+(isPaid?'':' #무료')+' #사용법';
   }
   ids.forEach(function(id){document.getElementById(id).addEventListener('input',build);});
   document.querySelectorAll('.copy').forEach(function(btn){
