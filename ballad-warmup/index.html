@@ -1,0 +1,746 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>발라드 워밍업</title>
+<meta name="theme-color" content="#EEEFF5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14121D" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="워밍업">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@500;700;800&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
+<style>:root{color-scheme:light}html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}img{max-width:100%}</style>
+<style>
+/* Layout concept: one focal breathing orb that grows and shrinks with the voice cue, a 5-part progress strip above it, and tuning controls plus the routine list beside or below. */
+:root{
+  --bg:#EEEFF5; --surface:#F8F8FC; --fg:#1D1A2A; --muted:#625E78; --line:#D6D4E3;
+  --accent:#B0366A; --accent-ink:#FFFFFF; --accent-soft:#F2DAE6;
+  --breath:#33639F; --breath-soft:#D8E4F4;
+  --rest-soft:#E3E2EC; --rest-line:#9A97AE;
+  --display:"Hahmlet","Noto Serif KR","Nanum Myeongjo",serif;
+  --body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14121D; --surface:#1D1A2B; --fg:#EDEBF7; --muted:#A5A1BC; --line:#332F49;
+    --accent:#EE6FA2; --accent-ink:#1B0D15; --accent-soft:#3C2236;
+    --breath:#86AEEB; --breath-soft:#212E47;
+    --rest-soft:#2A2740; --rest-line:#6C6886;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14121D; --surface:#1D1A2B; --fg:#EDEBF7; --muted:#A5A1BC; --line:#332F49;
+  --accent:#EE6FA2; --accent-ink:#1B0D15; --accent-soft:#3C2236;
+  --breath:#86AEEB; --breath-soft:#212E47;
+  --rest-soft:#2A2740; --rest-line:#6C6886;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:15px/1.55 var(--body);
+  padding-block:20px 44px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+button{font:inherit; color:inherit}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+.app{max-width:980px; margin:0 auto}
+.top{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; flex-wrap:wrap}
+.top h1{font:800 1.35rem/1.2 var(--display); margin:0}
+.top .meta{margin:2px 0 0; color:var(--muted); font-size:13px}
+.layout{display:grid; gap:24px; grid-template-columns:minmax(0,1fr)}
+@media (min-width:900px){ .layout{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); align-items:start} }
+
+.btn{border-radius:10px; min-height:44px; padding:10px 16px; cursor:pointer; border:1px solid var(--line); background:transparent; font-weight:500}
+.btn:hover{border-color:var(--rest-line)}
+.btn:disabled{opacity:.45; cursor:default}
+.btn.primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent); font-weight:600; font-size:16px; min-height:52px}
+.btn.small{min-height:36px; padding:6px 12px; font-size:13px}
+
+/* stage */
+.stage{
+  --orb-fill:var(--rest-soft); --orb-line:var(--rest-line);
+  background:var(--surface); border:1px solid var(--line); border-radius:14px;
+  padding:18px 16px 18px; min-width:0;
+}
+.stage[data-kind="breath"]{--orb-fill:var(--breath-soft); --orb-line:var(--breath)}
+.stage[data-kind="sing"]{--orb-fill:var(--accent-soft); --orb-line:var(--accent)}
+
+.steps{display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:6px}
+.steps button{background:none; border:0; padding:4px 0 0; text-align:left; color:var(--muted); font-size:12px; font-weight:500; cursor:pointer; display:grid; gap:6px; min-width:0}
+.steps button[aria-current="step"]{color:var(--fg); font-weight:600}
+.bar{height:4px; background:var(--line); border-radius:2px; overflow:hidden}
+.bar i{display:block; height:100%; width:0; background:var(--accent)}
+
+.orb-wrap{position:relative; width:min(100%,300px); aspect-ratio:1; margin:20px auto 8px}
+.orb-ring{position:absolute; inset:0; border-radius:50%; border:1.5px solid var(--line)}
+.orb-ring::after{content:""; position:absolute; inset:25%; border-radius:50%; border:1px dashed var(--line)}
+.orb{position:absolute; inset:0; border-radius:50%; background:var(--orb-fill); border:3px solid var(--orb-line); transform:scale(.58); will-change:transform}
+.count{position:absolute; inset:0; display:grid; place-content:center; text-align:center; pointer-events:none}
+.count span{font:700 2.8rem/1 var(--display); font-variant-numeric:tabular-nums}
+.count small{font-size:12px; color:var(--muted); letter-spacing:.08em; margin-top:6px}
+
+.cue{text-align:center}
+.chips{display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin:0; font-size:12px; color:var(--muted); letter-spacing:.04em}
+.cue h2{font:700 clamp(1.5rem,5.4vw,2rem)/1.25 var(--display); margin:6px 0 4px; text-wrap:balance}
+.hint{max-width:46ch; margin:0 auto; min-height:calc(1.55em*3); color:var(--muted); text-wrap:pretty}
+
+.notes{display:flex; justify-content:center; align-items:flex-end; gap:8px; height:84px; margin-top:8px}
+.notes[data-empty="true"]{visibility:hidden}
+.nt{display:flex; flex-direction:column; align-items:center; gap:4px; width:22px}
+.nt span{display:block; width:14px; border-radius:3px; background:var(--line); transition:background .15s}
+.nt span.on{background:var(--accent)}
+.nt span.past{background:var(--rest-line)}
+.nt small{font-size:11px; color:var(--muted); height:14px; line-height:14px}
+
+.next{text-align:center; color:var(--muted); font-size:13px; margin:6px 0 14px}
+.controls{display:grid; grid-template-columns:1fr 1.7fr 1fr; gap:8px}
+.controls .btn{min-width:0; padding-inline:8px}
+.timeline{display:grid; grid-template-columns:auto 1fr auto; gap:10px; align-items:center; margin-top:16px; font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums}
+
+/* side column */
+.side{display:grid; gap:24px; min-width:0}
+.side h2{font:700 1.05rem/1.3 var(--display); margin:0 0 6px}
+.row{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 0; border-top:1px solid var(--line); flex-wrap:wrap}
+.row .lab{font-size:14px}
+.seg{display:grid; grid-template-columns:1fr 1fr; gap:6px}
+.seg button{border:1px solid var(--line); background:transparent; border-radius:10px; padding:8px 12px; cursor:pointer; font-size:14px}
+.seg button[aria-pressed="true"]{background:var(--accent-soft); border-color:var(--accent); font-weight:600}
+.stepper{display:flex; align-items:center; gap:8px}
+.stepper button{width:36px; height:36px; border:1px solid var(--line); border-radius:10px; background:transparent; cursor:pointer; font-size:18px; line-height:1}
+.stepper output{min-width:10ch; text-align:center; font-variant-numeric:tabular-nums; font-size:14px}
+input[type="checkbox"],input[type="range"]{accent-color:var(--accent)}
+input[type="checkbox"]{width:20px; height:20px}
+input[type="range"]{width:min(180px,100%)}
+.note{margin:0; padding-top:4px; font-size:13px; color:var(--muted)}
+
+.routine ol{list-style:none; margin:0; padding:0; border-bottom:1px solid var(--line)}
+.routine li button{width:100%; display:grid; grid-template-columns:14px minmax(0,1fr) auto; gap:2px 12px; align-items:baseline; text-align:left; background:none; border:0; border-top:1px solid var(--line); padding:12px 0; cursor:pointer}
+.routine .dot{width:10px; height:10px; border-radius:50%; border:1.5px solid var(--muted); align-self:center}
+.routine li[data-state="active"] .dot{background:var(--accent); border-color:var(--accent)}
+.routine li[data-state="done"] .dot{background:var(--muted)}
+.routine .nm{font-weight:600}
+.routine li[data-state="done"] .nm{color:var(--muted)}
+.routine .tm{font-size:13px; color:var(--muted); font-variant-numeric:tabular-nums}
+.routine .ds{grid-column:2/4; font-size:13px; color:var(--muted)}
+.safety{font-size:13px; color:var(--muted); margin:0}
+
+@media (prefers-reduced-motion: reduce){ .nt span{transition:none} }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div>
+      <h1>발라드 워밍업</h1>
+      <p class="meta" id="meta"></p>
+    </div>
+    <button class="btn small" id="resetBtn" type="button">처음으로</button>
+  </header>
+
+  <div class="layout">
+    <section class="stage" id="stage" data-kind="rest" aria-label="현재 동작">
+      <div class="steps" id="steps"></div>
+
+      <div class="orb-wrap" aria-hidden="true">
+        <div class="orb-ring"></div>
+        <div class="orb" id="orb"></div>
+        <div class="count"><span id="count">0:00</span><small id="tag">전체</small></div>
+      </div>
+
+      <div class="cue">
+        <p class="chips"><span id="chipStep"></span><span id="chipRep" hidden></span></p>
+        <h2 id="cueTitle" aria-live="polite"></h2>
+        <p class="hint" id="cueHint"></p>
+      </div>
+
+      <div class="notes" id="notes" data-empty="true" aria-hidden="true"></div>
+      <p class="next" id="next"></p>
+
+      <div class="controls">
+        <button class="btn" id="prevBtn" type="button">이전 구간</button>
+        <button class="btn primary" id="mainBtn" type="button">시작하기</button>
+        <button class="btn" id="nextBtn" type="button">다음 구간</button>
+      </div>
+
+      <div class="timeline">
+        <span id="elapsedTxt">0:00</span>
+        <div class="bar"><i id="totalBar"></i></div>
+        <span id="remainTxt">-0:00</span>
+      </div>
+    </section>
+
+    <div class="side">
+      <section aria-labelledby="sTitle">
+        <h2 id="sTitle">안내 설정</h2>
+        <div class="row">
+          <span class="lab" id="lblRange">목소리 높이</span>
+          <div class="seg" role="group" aria-labelledby="lblRange">
+            <button type="button" id="gM" aria-pressed="true">남성 · 낮게</button>
+            <button type="button" id="gF" aria-pressed="false">여성 · 높게</button>
+          </div>
+        </div>
+        <div class="row">
+          <span class="lab" id="lblShift">시작음 (반음 조정)</span>
+          <div class="stepper" role="group" aria-labelledby="lblShift">
+            <button type="button" id="shDown" aria-label="반음 내리기">−</button>
+            <output id="rootTxt" aria-live="polite">C3 · 131Hz</output>
+            <button type="button" id="shUp" aria-label="반음 올리기">+</button>
+          </div>
+        </div>
+        <div class="row">
+          <label class="lab" for="voiceChk">안내 음성</label>
+          <input type="checkbox" id="voiceChk" role="switch">
+        </div>
+        <div class="row">
+          <label class="lab" for="toneChk">기준 안내음</label>
+          <input type="checkbox" id="toneChk" role="switch">
+        </div>
+        <div class="row">
+          <label class="lab" for="vol">안내음 볼륨</label>
+          <input type="range" id="vol" min="0" max="100" step="1">
+        </div>
+        <div class="row">
+          <span class="lab">시작음을 먼저 들어보세요</span>
+          <button class="btn small" id="previewBtn" type="button">시작음 듣기</button>
+        </div>
+        <p class="note" id="voiceNote" hidden></p>
+      </section>
+
+      <section class="routine" aria-labelledby="rTitle">
+        <h2 id="rTitle">오늘의 루틴</h2>
+        <ol id="routine"></ol>
+      </section>
+
+      <p class="safety">통증이 있거나 쉰 소리가 나면 바로 멈추세요. 목을 가다듬는 헛기침 대신 침을 삼키거나 허밍을 하면 됩니다. 코막힘이 계속되면 이비인후과 진료를 받아 보세요.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- helpers ---------- */
+const $ = id => document.getElementById(id);
+const COUNT = ['하나','둘','셋','넷','다섯','여섯','일곱','여덟','아홉','열'];
+const NOTE_NAMES = ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+const SOLFEGE = {0:'도',2:'레',4:'미',5:'파',7:'솔'};
+const midiFreq = m => 440*Math.pow(2,(m-69)/12);
+const noteName = m => NOTE_NAMES[((m%12)+12)%12] + (Math.floor(m/12)-1);
+const fmt = s => { s = Math.max(0,Math.round(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
+const clamp = (x,a,b) => Math.min(b,Math.max(a,x));
+
+/* ---------- settings (per viewer) ---------- */
+const KEY = 'ballad-warmup-v1';
+const settings = {gender:'m', shift:0, voice:true, tone:true, vol:60};
+try{
+  const raw = localStorage.getItem(KEY);
+  if(raw){ Object.assign(settings, JSON.parse(raw)); }
+}catch(e){}
+settings.gender = settings.gender === 'f' ? 'f' : 'm';
+settings.shift = clamp(Number(settings.shift)||0, -5, 5);
+settings.vol = clamp(Number(settings.vol)||0, 0, 100);
+settings.voice = settings.voice !== false;
+settings.tone = settings.tone !== false;
+const save = () => { try{ localStorage.setItem(KEY, JSON.stringify(settings)); }catch(e){} };
+const rootMidi = () => (settings.gender === 'm' ? 48 : 60) + settings.shift;
+
+/* ---------- routine data ---------- */
+const steps = [];
+function mk(short,name,desc){ const s = {short,name,desc,cues:[]}; steps.push(s); return s; }
+function add(s,o){ s.cues.push(Object.assign({lead:0,anim:'steady',tone:null,say:'',phases:null,rep:0,reps:0},o)); }
+const prep = (s,title,hint,say,dur) => add(s,{kind:'prep',tag:'준비',dur,title,hint,say,anim:'rest'});
+const rest = (s,dur,title,hint) => add(s,{kind:'rest',tag:'쉬기',dur,title:title||'숨 고르기',hint:hint||'코로 편하게 숨을 들이쉽니다.',anim:'rest'});
+
+/* 1. 호흡 */
+const s1 = mk('호흡','호흡 풀기','4초 들이쉬고 10초 "쓰으~"로 내쉬기');
+prep(s1,'어깨 힘 빼기','발을 어깨너비로 벌리고 서서 어깨와 턱의 힘을 풉니다.','편하게 서서, 어깨와 턱의 힘을 빼세요.',8);
+for(let i=0;i<8;i++){
+  add(s1,{kind:'breath',tag:'들숨',dur:4,anim:'in',title:'들이쉬기',hint:'코로 천천히 들이쉽니다. 배가 부드럽게 나오게 하세요.',say:i===0?'코로 천천히 들이쉬세요':'들이쉬세요',rep:i+1,reps:8});
+  add(s1,{kind:'breath',tag:'날숨',dur:10,anim:'out',title:'쓰으~ 내쉬기',hint:'일정한 바람으로 길게 내쉽니다. 소리가 흔들리지 않게요.',say:i===0?'쓰으, 하고 일정하게 내쉬세요':'내쉬세요',rep:i+1,reps:8});
+}
+
+/* 2. 성대 예열 */
+const s2 = mk('예열','성대 예열','빨대 불기 · 립트릴 5음 스케일');
+prep(s2,'빨대 불기 준비','빨대를 물고 "우~" 소리로 바람을 불어요. 빨대가 없으면 입술을 둥글게 모아 "우~" 합니다.','빨대를 물고 우 소리로, 낮은 음에서 중간 음까지 천천히 미끄러지세요.',8);
+for(let i=0;i<6;i++){
+  add(s2,{kind:'sing',tag:'소리',dur:8,lead:1,anim:'swell',title:'빨대 "우~" 슬라이드',hint:'낮은 음에서 중간 음까지 올라갔다 내려옵니다. 힘주지 않고 부드럽게.',say:COUNT[i],rep:i+1,reps:6,tone:{type:'glide',path:[0,7,0],rise:0}});
+  rest(s2,3);
+}
+prep(s2,'립트릴 준비','입술을 가볍게 떨며 "푸르르~". 도레미레도를 한 번 부를 때마다 반음씩 올라갔다 내려옵니다.','입술을 푸르르 떨며 도레미레도. 한 번마다 반음씩 올라가요.',7);
+const trillRises = [0,1,2,3,4,5,4,3,2,1];
+trillRises.forEach((r,i)=>{
+  add(s2,{kind:'sing',tag:'소리',dur:7,lead:1,anim:'steady',title:'립트릴 도레미레도',hint:'입술 떨림이 끊기지 않게 숨을 일정하게 보냅니다.',say:COUNT[i],rep:i+1,reps:trillRises.length,tone:{type:'seq',notes:[0,2,4,2,0],noteDur:1.2,rise:r}});
+  rest(s2,2);
+});
+
+/* 3. 비강·공명 */
+const s3 = mk('공명','비강·공명','허밍 · 음→아 전환 · 응(ng)');
+prep(s3,'코 옆 풀기','콧방울 옆에서 광대까지 손가락으로 가볍게 원을 그리며 문지릅니다. 세게 누르지 않아요.','손가락으로 콧방울 옆에서 광대까지, 가볍게 원을 그리며 문질러 주세요.',20);
+prep(s3,'허밍 준비','입술은 가볍게 붙이고 윗니와 아랫니는 살짝 띄웁니다.','입술을 가볍게 붙이고, 윗니와 아랫니는 살짝 띄우세요.',7);
+const humRises = [0,1,2,3,1];
+humRises.forEach((r,i)=>{
+  add(s3,{kind:'sing',tag:'소리',dur:10,lead:1,anim:'steady',title:'허밍 "음~" 5음 스케일',hint:'코 옆, 광대, 윗입술이 간질간질 울리면 정상입니다.',say:COUNT[i],rep:i+1,reps:humRises.length,tone:{type:'seq',notes:[0,2,4,5,7,5,4,2,0],noteDur:1,rise:r}});
+  rest(s3,2);
+});
+prep(s3,'음에서 아로','허밍으로 시작해 입을 열어 "아"로 이어갑니다. 코 옆 울림은 그대로 둡니다.','음으로 시작해서, 입을 열어 아로 이어가세요.',5);
+[0,1,2,1].forEach((r,i)=>{
+  add(s3,{kind:'sing',tag:'소리',dur:9,lead:1,anim:'steady',title:'음 → 아',hint:'입술을 붙이고 코 옆 울림을 먼저 확인합니다.',say:COUNT[i],rep:i+1,reps:4,tone:{type:'hold',rise:r},
+    phases:[{at:1,title:'음~',hint:'입술을 붙이고 코 옆 울림을 확인합니다.'},{at:5,title:'아~',hint:'입을 열어도 코 옆 울림은 그대로 유지합니다.'}]});
+  rest(s3,3);
+});
+prep(s3,'응(ng) 소리','혀 뒤쪽을 올려 입천장 뒤쪽에 붙이고 "응~" 소리를 냅니다.','혀 뒤쪽을 올려 입천장에 붙이고, 응 소리를 내세요.',5);
+[0,1,2,1].forEach((r,i)=>{
+  add(s3,{kind:'sing',tag:'소리',dur:9,lead:1,anim:'steady',title:'"응~" (ng) 8초',hint:'소리가 코 뒤로 울리며 앞으로 모이는 느낌을 찾습니다.',say:COUNT[i],rep:i+1,reps:4,tone:{type:'hold',rise:r}});
+  rest(s3,3);
+});
+
+/* 4. 발라드 특화 */
+const s4 = mk('발라드','발라드 특화','레가토 · 크레셴도 · 소프트 온셋 · 끝음 페이드');
+prep(s4,'레가토 준비','"우-오-아-오-우"를 끊기지 않고 물 흐르듯 이어서 부릅니다.','우 오 아 오 우를 끊기지 않고 물 흐르듯 이어서 부르세요.',6);
+[0,2,4,2].forEach((r,i)=>{
+  add(s4,{kind:'sing',tag:'소리',dur:11,lead:1,anim:'steady',title:'레가토 우-오-아-오-우',hint:'모음이 바뀌어도 소리가 끊기지 않게 이어갑니다.',say:COUNT[i],rep:i+1,reps:4,tone:{type:'hold',rise:r},
+    phases:[{at:1,title:'우'},{at:3,title:'오'},{at:5,title:'아'},{at:7,title:'오'},{at:9,title:'우'}]});
+  rest(s4,2);
+});
+prep(s4,'크레셴도 준비','한 음을 작게 시작해 점점 크게, 다시 작게 줄입니다. 후렴의 폭발과 끝음 빼기 연습입니다.','한 음을 작게 시작해서 점점 크게, 다시 작게 줄이세요.',6);
+[0,1,2,1].forEach((r,i)=>{
+  add(s4,{kind:'sing',tag:'소리',dur:9,lead:1,anim:'swell',title:'점점 크게, 다시 작게',hint:'원이 커질 때 소리도 키우고, 줄어들 때 함께 줄입니다.',say:COUNT[i],rep:i+1,reps:4,tone:{type:'swell',rise:r},
+    phases:[{at:1,title:'점점 크게',hint:'소리를 키워도 목에 힘이 들어가지 않게 숨으로 밀어 줍니다.'},{at:5,title:'점점 작게',hint:'음정은 그대로 두고 볼륨만 줄입니다.'}]});
+  rest(s4,3);
+});
+prep(s4,'소프트 온셋 준비','"하"가 아니라 "아"로, 숨소리가 섞이지 않게 부드럽게 시작합니다. 발라드 도입부에 중요합니다.','하가 아니라 아로, 숨소리 없이 부드럽게 시작하세요.',6);
+[0,1,2,1].forEach((r,i)=>{
+  add(s4,{kind:'sing',tag:'소리',dur:5,lead:1,anim:'steady',title:'소프트 온셋 "아"',hint:'소리가 시작되는 순간 성대가 가볍게 닿는 느낌으로.',say:COUNT[i],rep:i+1,reps:4,tone:{type:'hold',rise:r,attack:.35}});
+  rest(s4,4,'숨 들이쉬기','다음 "아"를 위해 코로 부드럽게 들이쉽니다.');
+});
+prep(s4,'끝음 페이드 준비','편한 음을 길게 끌다가 서서히 줄이며 끝냅니다.','편한 음을 길게 끌다가, 서서히 줄이며 끝내세요.',6);
+[0,1,2,1].forEach((r,i)=>{
+  add(s4,{kind:'sing',tag:'소리',dur:11,lead:1,anim:'fade',title:'끝음 페이드',hint:'음정이 처지지 않게 숨을 아끼면서 길게 끌어요.',say:COUNT[i],rep:i+1,reps:4,tone:{type:'fade',rise:r},
+    phases:[{at:1,title:'길게 끌기',hint:'일정한 숨으로 음을 유지합니다.'},{at:6,title:'서서히 줄이기',hint:'음정은 그대로 두고 볼륨만 천천히 줄입니다.'}]});
+  rest(s4,3);
+});
+
+/* 5. 마무리 */
+const s5 = mk('마무리','마무리','곡의 가장 쉬운 구절을 작게');
+add(s5,{kind:'sing',tag:'소리',dur:15,anim:'steady',title:'편한 음으로 작은 허밍',hint:'가장 편한 음에서 작게, 목에 힘 없이 이어갑니다.',say:'편한 음으로 작게 허밍하세요.'});
+add(s5,{kind:'sing',tag:'소리',dur:35,anim:'steady',title:'곡의 가장 쉬운 구절',hint:'가장 낮고 편한 구절을 작게 불러 봅니다. 감정은 목이 아니라 호흡으로 실어 주세요.',say:'곡에서 가장 쉬운 구절을 작게 불러 보세요.'});
+add(s5,{kind:'rest',tag:'쉬기',dur:10,anim:'rest',title:'물 한 모금',hint:'고음 파트는 몸이 충분히 풀린 뒤 마지막에 가볍게 시도하세요.',say:'수고하셨습니다. 물을 한 모금 마시고 노래를 시작하세요.'});
+
+/* timeline */
+const flat = [];
+let acc = 0;
+steps.forEach((s,si)=>{
+  s.start = acc;
+  s.cues.forEach(c=>{ c.start = acc; c.step = si; flat.push(c); acc += c.dur; });
+  s.end = acc; s.dur = s.end - s.start;
+});
+const TOTAL = acc;
+function cueIndexAt(e){
+  for(let i=flat.length-1;i>=0;i--){ if(e >= flat[i].start) return i; }
+  return 0;
+}
+
+/* ---------- audio ---------- */
+let ctx = null, master = null, active = [];
+function ensureAudio(){
+  try{
+    if(!ctx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC) return false;
+      ctx = new AC();
+      master = ctx.createGain();
+      master.gain.value = settings.vol/100;
+      const lp = ctx.createBiquadFilter();
+      lp.type = 'lowpass'; lp.frequency.value = 2000;
+      master.connect(lp); lp.connect(ctx.destination);
+    }
+    if(ctx.state === 'suspended') ctx.resume();
+    return true;
+  }catch(e){ return false; }
+}
+function voice(path,t0,dur,env){
+  const g = ctx.createGain(); g.gain.value = 0; g.connect(master);
+  const o1 = ctx.createOscillator(); o1.type = 'sine';
+  const o2 = ctx.createOscillator(); o2.type = 'sine';
+  const g2 = ctx.createGain(); g2.gain.value = 0.22;
+  o1.connect(g); o2.connect(g2); g2.connect(g);
+  o1.frequency.setValueAtTime(path[0][1],t0);
+  o2.frequency.setValueAtTime(path[0][1]*2,t0);
+  for(let i=1;i<path.length;i++){
+    o1.frequency.linearRampToValueAtTime(path[i][1],t0+path[i][0]);
+    o2.frequency.linearRampToValueAtTime(path[i][1]*2,t0+path[i][0]);
+  }
+  g.gain.setValueAtTime(0.0001,t0);
+  env.forEach(p => g.gain.linearRampToValueAtTime(p[1],t0+p[0]));
+  const end = t0+dur+0.05;
+  o1.start(t0); o2.start(t0); o1.stop(end); o2.stop(end);
+  const rec = {g,o1,o2};
+  active.push(rec);
+  o1.onended = () => { active = active.filter(a=>a!==rec); try{ g.disconnect(); }catch(e){} };
+}
+const envHold = (d,a,r,pk=.5) => [[0,0],[a,pk],[Math.max(a,d-r),pk],[d,0]];
+const envSwell = (d,pk=.5) => [[0,.02],[d*.25,pk*.3],[d*.5,pk],[d*.75,pk*.3],[d,.02]];
+const envFade = (d,pk=.5) => [[0,0],[.2,pk],[d*.5,pk],[d*.75,pk*.35],[d,0]];
+function stopTones(){
+  if(!ctx) return;
+  const now = ctx.currentTime;
+  active.forEach(a=>{
+    try{
+      a.g.gain.cancelScheduledValues(now);
+      a.g.gain.setTargetAtTime(0,now,0.02);
+      a.o1.stop(now+0.12); a.o2.stop(now+0.12);
+    }catch(e){}
+  });
+}
+function playCueTone(c){
+  if(!settings.tone || !c.tone || !ensureAudio()) return;
+  const T = c.tone, d = c.dur - c.lead;
+  const base = rootMidi() + (T.rise||0);
+  const f = n => midiFreq(base+n);
+  const t0 = ctx.currentTime + 0.03 + c.lead;
+  if(T.type === 'seq'){
+    T.notes.forEach((n,k)=> voice([[0,f(n)]],t0+k*T.noteDur,T.noteDur*0.94,envHold(T.noteDur*0.94,0.05,0.12)));
+  }else if(T.type === 'glide'){
+    const pts = T.path.map((n,k)=>[k*d/(T.path.length-1),f(n)]);
+    voice(pts,t0,d,envHold(d,0.25,0.4));
+  }else if(T.type === 'swell'){
+    voice([[0,f(0)]],t0,d,envSwell(d));
+  }else if(T.type === 'fade'){
+    voice([[0,f(0)]],t0,d,envFade(d));
+  }else{
+    voice([[0,f(0)]],t0,d,envHold(d,T.attack||0.15,0.35));
+  }
+}
+function previewTone(){
+  if(!ensureAudio()) return;
+  stopTones();
+  const t0 = ctx.currentTime + 0.05;
+  voice([[0,midiFreq(rootMidi())]],t0,1.8,envHold(1.8,0.15,0.4));
+}
+
+/* ---------- speech ---------- */
+let koVoice = null;
+const hasSpeech = 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined';
+function loadVoices(){
+  if(!hasSpeech) return;
+  const vs = speechSynthesis.getVoices();
+  koVoice = vs.find(v => /^ko/i.test(v.lang)) || null;
+  updateVoiceNote(vs.length);
+}
+function updateVoiceNote(n){
+  const note = $('voiceNote');
+  if(!hasSpeech){ note.hidden = false; note.textContent = '이 브라우저는 음성 안내를 지원하지 않습니다. 화면 안내를 따라 주세요.'; }
+  else if(n > 0 && !koVoice){ note.hidden = false; note.textContent = '이 기기에는 한국어 음성이 없어 화면과 안내음으로만 진행됩니다.'; }
+  else note.hidden = true;
+}
+function speak(text){
+  if(!settings.voice || !text || !hasSpeech) return;
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'ko-KR';
+    if(koVoice) u.voice = koVoice;
+    u.rate = 0.95;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+function cancelSpeech(){ if(hasSpeech){ try{ speechSynthesis.cancel(); }catch(e){} } }
+function primeSpeech(){
+  if(!hasSpeech) return;
+  try{ const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); }catch(e){}
+}
+
+/* ---------- wake lock ---------- */
+let wake = null;
+async function acquireWake(){
+  try{
+    if('wakeLock' in navigator && !wake){
+      wake = await navigator.wakeLock.request('screen');
+      wake.addEventListener('release',()=>{ wake = null; });
+    }
+  }catch(e){}
+}
+function releaseWake(){ try{ if(wake) wake.release(); }catch(e){} wake = null; }
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState === 'visible' && state.mode === 'running') acquireWake();
+});
+
+/* ---------- state ---------- */
+const state = {mode:'idle', elapsed:0, last:0, idx:-1};
+let shownIdx = -1, shown = .58, lastTs = 0, noteEls = [], noteK = -2;
+const cache = {};
+const el = {
+  stage:$('stage'), steps:$('steps'), orb:$('orb'), count:$('count'), tag:$('tag'),
+  chipStep:$('chipStep'), chipRep:$('chipRep'), title:$('cueTitle'), hint:$('cueHint'),
+  notes:$('notes'), next:$('next'), main:$('mainBtn'), prev:$('prevBtn'), nextBtn:$('nextBtn'),
+  totalBar:$('totalBar'), elapsedTxt:$('elapsedTxt'), remainTxt:$('remainTxt'), routine:$('routine')
+};
+function setText(node,key,txt){ if(cache[key] !== txt){ cache[key] = txt; node.textContent = txt; } }
+function curElapsed(){
+  if(state.mode === 'running') return Math.min(TOTAL, state.elapsed + (performance.now()-state.last)/1000);
+  return state.elapsed;
+}
+
+/* ---------- build static UI ---------- */
+const stepBtns = [], stepBars = [], routineLis = [];
+steps.forEach((s,k)=>{
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.setAttribute('aria-label', s.name+' 구간으로 이동');
+  const label = document.createElement('span'); label.textContent = s.short;
+  const bar = document.createElement('div'); bar.className = 'bar';
+  const fill = document.createElement('i'); bar.append(fill);
+  b.append(label,bar);
+  b.addEventListener('click',()=>jumpTo(k));
+  el.steps.append(b); stepBtns.push(b); stepBars.push(fill);
+
+  const li = document.createElement('li');
+  const rb = document.createElement('button'); rb.type = 'button';
+  const dot = document.createElement('span'); dot.className = 'dot'; dot.setAttribute('aria-hidden','true');
+  const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = s.name;
+  const tm = document.createElement('span'); tm.className = 'tm'; tm.textContent = fmt(s.dur);
+  const ds = document.createElement('span'); ds.className = 'ds'; ds.textContent = s.desc;
+  rb.append(dot,nm,tm,ds);
+  rb.addEventListener('click',()=>jumpTo(k));
+  li.append(rb); el.routine.append(li); routineLis.push(li);
+});
+$('meta').textContent = steps.length+'구간 · 약 '+Math.round(TOTAL/60)+'분 · 총 '+fmt(TOTAL);
+
+/* ---------- rendering ---------- */
+function buildNotes(c){
+  el.notes.replaceChildren(); noteEls = []; noteK = -2;
+  if(c.tone && c.tone.type === 'seq'){
+    el.notes.dataset.empty = 'false';
+    c.tone.notes.forEach(n=>{
+      const d = document.createElement('div'); d.className = 'nt';
+      const b = document.createElement('span'); b.style.height = (12+n*6)+'px';
+      const l = document.createElement('small'); l.textContent = SOLFEGE[n] || '';
+      d.append(b,l); el.notes.append(d); noteEls.push(b);
+    });
+  }else{
+    el.notes.dataset.empty = 'true';
+  }
+}
+function renderCue(i){
+  const c = flat[i], s = steps[c.step];
+  el.stage.dataset.kind = (c.kind === 'breath' || c.kind === 'sing') ? c.kind : 'rest';
+  setText(el.chipStep,'cs','구간 '+(c.step+1)+'/'+steps.length+' · '+s.name);
+  if(c.reps){ el.chipRep.hidden = false; setText(el.chipRep,'cr',c.rep+'/'+c.reps+'회'); } else { el.chipRep.hidden = true; }
+  setText(el.tag,'tag',c.tag);
+  buildNotes(c);
+  let j = i+1;
+  while(j < flat.length && flat[j].kind === 'rest') j++;
+  const n = flat[j];
+  let nx = '마지막 동작입니다';
+  if(n) nx = (n.step === c.step && n.title === c.title) ? '다음: 한 번 더' : '다음: '+n.title;
+  setText(el.next,'nx',nx);
+  stepBtns.forEach((b,k)=>{ if(k === c.step) b.setAttribute('aria-current','step'); else b.removeAttribute('aria-current'); });
+  routineLis.forEach((li,k)=>{ li.dataset.state = k < c.step ? 'done' : (k === c.step ? 'active' : 'todo'); });
+}
+function renderLive(e,i){
+  const c = flat[i], t = e - c.start;
+  let title = c.title, hint = c.hint;
+  if(state.mode === 'idle' && e === 0){
+    title = '준비되셨나요?';
+    hint = '목소리 높이를 고른 뒤 시작하세요. 이어폰을 쓰면 안내음이 더 잘 들립니다.';
+  }else if(state.mode === 'done'){
+    title = '워밍업 끝';
+    hint = '가장 쉬운 구절부터 작게 시작하세요. 목이 불편하면 쉬어 주세요.';
+  }else if(c.phases){
+    for(const p of c.phases){ if(t >= p.at){ title = p.title; hint = p.hint || c.hint; } }
+  }
+  setText(el.title,'ti',title);
+  setText(el.hint,'hi',hint);
+
+  if(state.mode === 'running' || state.mode === 'paused'){
+    setText(el.count,'co',String(Math.max(0,Math.ceil(c.dur - t))));
+    setText(el.tag,'tag',c.tag);
+  }else if(state.mode === 'done'){
+    setText(el.count,'co','완료'); setText(el.tag,'tag','수고하셨습니다');
+  }else{
+    setText(el.count,'co',fmt(TOTAL - e)); setText(el.tag,'tag',e === 0 ? '전체 시간' : '남은 시간');
+  }
+
+  if(noteEls.length){
+    const k = Math.floor((t - c.lead)/c.tone.noteDur);
+    if(k !== noteK){
+      noteK = k;
+      noteEls.forEach((b,idx)=>{ b.className = idx === k ? 'on' : (idx < k ? 'past' : ''); });
+    }
+  }
+  steps.forEach((s,k)=>{
+    const pct = clamp((e - s.start)/s.dur,0,1)*100;
+    stepBars[k].style.width = pct.toFixed(1)+'%';
+  });
+  el.totalBar.style.width = (clamp(e/TOTAL,0,1)*100).toFixed(1)+'%';
+  setText(el.elapsedTxt,'el',fmt(e));
+  setText(el.remainTxt,'re','-'+fmt(TOTAL - e));
+}
+function view(){
+  const e = curElapsed();
+  const i = state.mode === 'done' ? flat.length-1 : cueIndexAt(e);
+  if(i !== shownIdx){ shownIdx = i; renderCue(i); }
+  renderLive(e,i);
+}
+function updateMain(){
+  const m = state.mode;
+  let label = '시작하기';
+  if(m === 'running') label = '일시정지';
+  else if(m === 'paused') label = '계속하기';
+  else if(m === 'done') label = '다시 하기';
+  else if(state.elapsed > 0) label = '여기서 시작';
+  el.main.textContent = label;
+  const e = curElapsed();
+  const si = flat[state.mode === 'done' ? flat.length-1 : cueIndexAt(e)].step;
+  el.nextBtn.disabled = si >= steps.length-1 || m === 'done';
+}
+
+/* ---------- control ---------- */
+function onCueStart(c){ speak(c.say); playCueTone(c); }
+function logic(){
+  if(state.mode !== 'running') return;
+  const now = performance.now();
+  state.elapsed += (now - state.last)/1000;
+  state.last = now;
+  if(state.elapsed >= TOTAL){ finish(); return; }
+  const i = cueIndexAt(state.elapsed);
+  if(i !== state.idx){ state.idx = i; onCueStart(flat[i]); }
+  view();
+  updateMain();
+}
+function start(){
+  ensureAudio(); primeSpeech();
+  if(state.mode === 'done') state.elapsed = 0;
+  const i = cueIndexAt(state.elapsed);
+  state.elapsed = flat[i].start;
+  state.idx = -1; state.mode = 'running'; state.last = performance.now();
+  acquireWake(); logic(); updateMain();
+}
+function pause(){
+  state.mode = 'paused';
+  stopTones(); cancelSpeech(); releaseWake();
+  view(); updateMain();
+}
+function finish(){
+  state.mode = 'done'; state.elapsed = TOTAL;
+  stopTones(); releaseWake();
+  shownIdx = -1; view(); updateMain();
+}
+function reset(){
+  stopTones(); cancelSpeech(); releaseWake();
+  state.mode = 'idle'; state.elapsed = 0; state.idx = -1;
+  shownIdx = -1; view(); updateMain();
+}
+function jumpTo(k){
+  k = clamp(k,0,steps.length-1);
+  stopTones(); cancelSpeech();
+  state.elapsed = steps[k].start;
+  if(state.mode === 'done') state.mode = 'idle';
+  state.idx = -1;
+  if(state.mode === 'running'){ state.last = performance.now(); logic(); }
+  shownIdx = -1; view(); updateMain();
+}
+function currentStep(){
+  return flat[state.mode === 'done' ? flat.length-1 : cueIndexAt(curElapsed())].step;
+}
+el.main.addEventListener('click',()=>{
+  if(state.mode === 'running') pause(); else start();
+});
+el.prev.addEventListener('click',()=>{
+  const si = currentStep();
+  const into = curElapsed() - steps[si].start;
+  jumpTo(into > 3 ? si : si-1);
+});
+el.nextBtn.addEventListener('click',()=>jumpTo(currentStep()+1));
+$('resetBtn').addEventListener('click',reset);
+
+/* ---------- settings UI ---------- */
+function applySettings(){
+  $('gM').setAttribute('aria-pressed', settings.gender === 'm' ? 'true' : 'false');
+  $('gF').setAttribute('aria-pressed', settings.gender === 'f' ? 'true' : 'false');
+  const r = rootMidi();
+  $('rootTxt').textContent = noteName(r)+' · '+Math.round(midiFreq(r))+'Hz';
+  $('voiceChk').checked = settings.voice;
+  $('toneChk').checked = settings.tone;
+  $('vol').value = settings.vol;
+  $('shDown').disabled = settings.shift <= -5;
+  $('shUp').disabled = settings.shift >= 5;
+  if(master) master.gain.value = settings.vol/100;
+}
+$('gM').addEventListener('click',()=>{ settings.gender = 'm'; save(); applySettings(); });
+$('gF').addEventListener('click',()=>{ settings.gender = 'f'; save(); applySettings(); });
+$('shDown').addEventListener('click',()=>{ settings.shift = Math.max(-5,settings.shift-1); save(); applySettings(); });
+$('shUp').addEventListener('click',()=>{ settings.shift = Math.min(5,settings.shift+1); save(); applySettings(); });
+$('voiceChk').addEventListener('change',e=>{ settings.voice = e.target.checked; if(!settings.voice) cancelSpeech(); save(); });
+$('toneChk').addEventListener('change',e=>{ settings.tone = e.target.checked; if(!settings.tone) stopTones(); save(); });
+$('vol').addEventListener('input',e=>{ settings.vol = Number(e.target.value); if(master) master.gain.value = settings.vol/100; save(); });
+$('previewBtn').addEventListener('click',previewTone);
+
+/* ---------- orb animation ---------- */
+const ease = x => x < .5 ? 2*x*x : 1 - Math.pow(-2*x+2,2)/2;
+function scaleFor(c,t){
+  const d = Math.max(0.1,c.dur - c.lead);
+  const p = clamp((t - c.lead)/d,0,1);
+  switch(c.anim){
+    case 'in': return .5 + .5*ease(p);
+    case 'out': return 1 - .5*ease(p);
+    case 'swell': return .5 + .5*Math.sin(Math.PI*p);
+    case 'fade': return p < .5 ? .95 : .95 - .45*ease((p-.5)*2);
+    case 'steady': return .78 + .03*Math.sin(t*1.6);
+    default: return .5;
+  }
+}
+function frame(ts){
+  requestAnimationFrame(frame);
+  const dt = Math.min(.1,(ts - (lastTs || ts))/1000);
+  lastTs = ts;
+  let target;
+  if(state.mode === 'running'){
+    const e = curElapsed();
+    const c = flat[cueIndexAt(e)];
+    target = scaleFor(c,e - c.start);
+  }else if(state.mode === 'idle'){
+    target = .58 + .02*Math.sin(ts/900);
+  }else{
+    target = .58;
+  }
+  shown += (target - shown)*Math.min(1,dt*10);
+  el.orb.style.transform = 'scale('+shown.toFixed(3)+')';
+}
+
+/* ---------- init ---------- */
+if(hasSpeech){
+  loadVoices();
+  try{ speechSynthesis.addEventListener('voiceschanged',loadVoices); }catch(e){}
+}else{
+  updateVoiceNote(0);
+}
+applySettings();
+view();
+updateMain();
+requestAnimationFrame(frame);
+setInterval(logic,100);
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('./sw.js').catch(function () {});
+  });
+}
+</script>
+</body>
+</html>
