@@ -89,6 +89,43 @@
                     onchange="saveStateAndCalculate()">
             </div>
 
+            <!-- 계좌 정보 카드 -->
+            <div class="bg-white p-5 sm:p-6 rounded-3xl shadow-sm border border-slate-200/80">
+                <div class="flex items-center justify-between mb-4 border-b pb-3 border-slate-100">
+                    <div class="flex items-center gap-2">
+                        <div class="p-2 bg-amber-50 rounded-xl text-amber-600">
+                            <i class="fa-solid fa-building-columns text-lg"></i>
+                        </div>
+                        <h2 class="text-base sm:text-lg font-bold text-slate-800">송금 계좌 정보</h2>
+                    </div>
+                    <span class="text-xs text-slate-400">이 기기에만 저장</span>
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <div class="text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 inline-block"></span> A 계좌
+                        </div>
+                        <div class="grid grid-cols-12 gap-2">
+                            <input type="text" id="accABank" placeholder="은행 (예: 국민)" oninput="saveAccounts()"
+                                class="col-span-5 px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50">
+                            <input type="text" inputmode="numeric" id="accANum" placeholder="계좌번호" oninput="saveAccounts()"
+                                class="col-span-7 px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50">
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> C 계좌
+                        </div>
+                        <div class="grid grid-cols-12 gap-2">
+                            <input type="text" id="accCBank" placeholder="은행 (예: 신한)" oninput="saveAccounts()"
+                                class="col-span-5 px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50">
+                            <input type="text" inputmode="numeric" id="accCNum" placeholder="계좌번호" oninput="saveAccounts()"
+                                class="col-span-7 px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- 2. 기본 지출 항목 카드 -->
             <div class="bg-white p-5 sm:p-6 rounded-3xl shadow-sm border border-slate-200/80">
                 <div class="flex items-center justify-between mb-4 border-b pb-3 border-slate-100">
@@ -502,6 +539,20 @@
             document.getElementById('phonePayer').value = defaults.phone.payer;
         }
 
+        // 계좌 정보 (별도 키로 저장 → 초기화 버튼에도 유지)
+        const ACCOUNT_IDS = ['accABank', 'accANum', 'accCBank', 'accCNum'];
+        function saveAccounts() {
+            const data = {};
+            ACCOUNT_IDS.forEach(id => data[id] = document.getElementById(id).value);
+            try { localStorage.setItem('pwa_calc_accounts', JSON.stringify(data)); } catch(e) {}
+        }
+        function loadAccounts() {
+            try {
+                const data = JSON.parse(localStorage.getItem('pwa_calc_accounts') || '{}');
+                ACCOUNT_IDS.forEach(id => { if (data[id]) document.getElementById(id).value = data[id]; });
+            } catch(e) {}
+        }
+
         // LocalStorage 저장 및 복원
         function saveStateAndCalculate() {
             const state = {
@@ -789,6 +840,19 @@
             const bannerEl = document.getElementById('finalTransferText');
             let bannerCleanText = bannerEl.innerText.replace(/\n/g, ' ');
 
+            const couplePaid = document.getElementById('couplePaid').innerText;
+            const coupleNet = document.getElementById('coupleNet').innerText;
+            const cPaid = document.getElementById('cPaid').innerText;
+            const cNet = document.getElementById('cNet').innerText;
+
+            function accountLine(label, bankId, numId) {
+                const bank = document.getElementById(bankId).value.trim();
+                const num = document.getElementById(numId).value.trim();
+                if (!bank && !num) return `  · ${label}: (미입력)\n`;
+                return `  · ${label}: ${bank} ${num}\n`;
+            }
+            const accountStr = accountLine('A', 'accABank', 'accANum') + accountLine('C', 'accCBank', 'accCNum');
+
             const summaryText = `[🏡 3인 가구 생활비 정산 내역]\n` +
                 `📅 정산 일자: ${formattedDate}\n` +
                 `-----------------------------\n` +
@@ -796,10 +860,20 @@
                 `-----------------------------\n` +
                 `💰 총 발생 지출: ${total}\n` +
                 `👤 1인당 금액 (1/3): ${perPerson}\n` +
-                `👫 A·B 부부 지분 (2/3): ${coupleShare}\n` +
-                `🧑 C 동생 지분 (1/3): ${cShare}\n` +
                 `-----------------------------\n` +
-                `▶ 최종 송금 안내:\n${bannerCleanText}`;
+                `📊 구성원별 부담금 및 선납 현황\n` +
+                `👫 A·B 부부 (2/3)\n` +
+                `  · 부담할 금액: ${coupleShare}\n` +
+                `  · 실제 결제한 금액: ${couplePaid}\n` +
+                `  · 정산 결과: ${coupleNet}\n` +
+                `🧑 C 동생 (1/3)\n` +
+                `  · 부담할 금액: ${cShare}\n` +
+                `  · 실제 결제한 금액: ${cPaid}\n` +
+                `  · 정산 결과: ${cNet}\n` +
+                `-----------------------------\n` +
+                `▶ 최종 정산 결과:\n${bannerCleanText}\n` +
+                `-----------------------------\n` +
+                `🏦 계좌 안내:\n${accountStr}`;
 
             const tempArea = document.createElement('textarea');
             tempArea.value = summaryText;
@@ -826,6 +900,7 @@
 
         window.onload = function() {
             loadStateOrDefaults();
+            loadAccounts();
             renderCustomExpenses();
             calculateSettlement();
         };
