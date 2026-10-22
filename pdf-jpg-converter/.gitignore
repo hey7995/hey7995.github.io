@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# 변환 결과물
+*_jpg/
+merged.pdf
+
+# OS / 에디터
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
