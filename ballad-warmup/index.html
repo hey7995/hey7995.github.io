@@ -58,7 +58,8 @@ button{font:inherit; color:inherit}
 .app{max-width:980px; margin:0 auto}
 .top{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; flex-wrap:wrap}
 .top h1{font:800 1.35rem/1.2 var(--display); margin:0}
-.modes{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; margin:0 0 16px}
+.modes{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; margin:0 0 16px}
+@media (min-width:560px){ .modes{grid-template-columns:repeat(4,minmax(0,1fr))} }
 .modes button{display:grid; justify-items:center; gap:1px; min-width:0; min-height:48px; padding:6px 8px; border:1px solid var(--line); border-radius:10px; background:transparent; cursor:pointer; font-size:14px; font-weight:500}
 .modes button small{font-size:11px; font-weight:400; color:var(--muted)}
 .modes button[aria-pressed="true"]{background:var(--accent-soft); border-color:var(--accent); font-weight:600}
@@ -261,7 +262,7 @@ settings.shift = clamp(Number(settings.shift)||0, -5, 5);
 settings.vol = clamp(Number(settings.vol)||0, 0, 100);
 settings.voice = settings.voice !== false;
 settings.tone = settings.tone !== false;
-if(['warmup','tone','cooldown'].indexOf(settings.mode) < 0) settings.mode = 'warmup';
+if(['warmup','tone','style','cooldown'].indexOf(settings.mode) < 0) settings.mode = 'warmup';
 const save = () => { try{ localStorage.setItem(KEY, JSON.stringify(settings)); }catch(e){} };
 const rootMidi = () => (settings.gender === 'm' ? 48 : 60) + settings.shift;
 
@@ -484,6 +485,63 @@ function buildCooldown(){
   add(c3,{kind:'rest',tag:'쉬기',dur:12,anim:'rest',title:'물 한 모금과 휴식',hint:'미지근한 물을 천천히 마십니다. 헛기침 대신 침을 삼키고, 큰 소리로 말하거나 속삭이는 것은 피하세요.',say:'수고하셨습니다. 미지근한 물을 한 모금 마시고, 목을 쉬게 해 주세요.'});
 }
 
+/* ===== 성시경 스타일 ===== */
+function buildStyle(){
+  const g1 = mk('음역','편한 낮은 음 잡기','평소 말소리보다 조금 낮은 음에서 허밍');
+  prep(g1,'방향 잡기','특정 가수와 똑같이 만드는 연습이 아닙니다. 따뜻하고 힘 뺀 톤의 방향을 내 목에 맞게 찾습니다. 낮은 톤을 만든다고 목을 누르거나 조이지 않습니다.','똑같이 만드는 연습이 아닙니다. 힘을 빼고, 내 목에 편한 낮은 음을 찾으세요.',8);
+  prep(g1,'낮은 허밍','평소 말하는 음보다 조금 낮은 편한 음에서 허밍합니다. 코 옆이 가볍게 울리면 충분합니다.','편한 낮은 음에서 허밍하세요.',5);
+  [-3,-2,-1,-2].forEach((r,i)=>{
+    add(g1,{kind:'sing',tag:'소리',dur:9,lead:1,anim:'steady',title:'낮은 허밍 "음~"',hint:'목에 힘이 들어가면 한 음 올려도 됩니다. 편한 음이 내 톤의 출발점입니다.',say:COUNT[i],rep:i+1,reps:4,tone:{type:'hold',rise:r}});
+    rest(g1,3);
+  });
+
+  const g2 = mk('말하듯','말하듯 부르기','대화하듯 힘 빼고 짧은 구절 부르기');
+  prep(g2,'말하듯 부르기','친구에게 말하듯 힘을 빼고, 기준음의 높낮이만 따라 자연스럽게 흘려 부릅니다. 소리를 크게 키우지 않습니다.','친구에게 말하듯 힘을 빼고, 기준음을 따라 부르세요.',7);
+  [-2,-1,0,-1].forEach((r,i)=>{
+    add(g2,{kind:'sing',tag:'소리',dur:8,lead:1,anim:'steady',title:'말하듯 "안녕, 오늘 어땠어"',hint:'노래하는 목소리가 아니라 말하는 힘으로 부릅니다. 음은 기준음을 따라 낮게 흐르게 합니다.',say:COUNT[i],rep:i+1,reps:4,tone:{type:'seq',notes:[4,4,2,2,0],noteDur:1.4,rise:r}});
+    rest(g2,2);
+  });
+
+  const g3 = mk('숨결','숨 섞인 부드러운 시작','숨을 아주 조금 섞어 부드럽게 시작');
+  prep(g3,'부드러운 시작','아로 시작하되 숨을 아주 조금만 섞습니다. 바람 소리가 크게 들리면 숨을 줄입니다.','아 소리를, 숨을 아주 조금만 섞어서 부드럽게 시작하세요.',7);
+  [-2,-1,0,-1].forEach((r,i)=>{
+    add(g3,{kind:'sing',tag:'소리',dur:9,lead:1,anim:'steady',title:'숨 섞인 "아~"',hint:'시작은 부드럽게, 그 뒤에는 소리를 안정시킵니다.',say:COUNT[i],rep:i+1,reps:4,tone:{type:'hold',rise:r,attack:.35},
+      phases:[{at:1,title:'숨을 아주 조금 섞어 시작',hint:'소리가 닿는 순간 성대가 가볍게 붙는 느낌으로 합니다.'},{at:4,title:'숨을 줄이며 안정시키기',hint:'음정을 유지하고 소리를 또렷하게 붙입니다. 목을 조이지 않습니다.'}]});
+    rest(g3,3);
+  });
+
+  const g4 = mk('발음','또렷한 발음과 레가토','자음은 가볍게, 모음은 길게 이어 부르기');
+  prep(g4,'자음은 가볍게','마 네 미 모 무를 끊기지 않게 이어 부릅니다. 자음은 가볍게 닿고 모음을 길게 끌어 소리가 흐르게 합니다.','마 네 미 모 무를 끊기지 않게 이어 부르세요. 자음은 가볍게요.',7);
+  [-2,0,-1].forEach((r,i)=>{
+    add(g4,{kind:'sing',tag:'소리',dur:11,lead:1,anim:'steady',title:'마-네-미-모-무',hint:'자음은 가볍게 닿고, 모음을 길게 이어 소리가 끊기지 않게 합니다.',say:COUNT[i],rep:i+1,reps:3,tone:{type:'hold',rise:r},
+      phases:[{at:1,title:'마'},{at:3,title:'네'},{at:5,title:'미'},{at:7,title:'모'},{at:9,title:'무'}]});
+    rest(g4,3);
+  });
+
+  const g5 = mk('끝음','끝음 부드럽게 빼기','음정은 유지하고 볼륨만 서서히 줄이기');
+  prep(g5,'끝음 빼기','음을 또렷하게 시작해서 길게 끌다가, 음정은 그대로 두고 볼륨만 서서히 줄입니다. 비브라토는 억지로 넣지 않습니다.','음을 또렷하게 시작해서, 음정은 그대로 두고 볼륨만 서서히 줄이세요.',7);
+  [-2,-1,0,-1].forEach((r,i)=>{
+    add(g5,{kind:'sing',tag:'소리',dur:11,lead:1,anim:'fade',title:'끝음 빼기',hint:'끝에서 음정이 처지지 않게 숨을 아끼면서 줄입니다.',say:COUNT[i],rep:i+1,reps:4,tone:{type:'fade',rise:r},
+      phases:[{at:1,title:'또렷하게 시작',hint:'소리를 안정되게 붙입니다.'},{at:6,title:'볼륨만 서서히 줄이기',hint:'음정은 그대로 두고 소리만 줄입니다. 숨을 한 번에 쓰지 않습니다.'}]});
+    rest(g5,3);
+  });
+
+  const g6 = mk('강약','다이내믹 조절','작게 시작해 서서히 키우고 다시 줄이기');
+  prep(g6,'서서히 쌓기','아주 작게 시작해서 지르지 않고 서서히 키웠다가 다시 줄입니다. 감정은 소리를 키우는 것이 아니라 천천히 쌓는 것으로 표현합니다.','아주 작게 시작해서 서서히 키웠다가, 다시 줄이세요. 지르지 않습니다.',7);
+  [-1,0,-1].forEach((r,i)=>{
+    add(g6,{kind:'sing',tag:'소리',dur:10,lead:1,anim:'swell',title:'작게 → 크게 → 작게',hint:'원이 커질 때 소리를 서서히 키우고, 줄어들 때 함께 줄입니다.',say:COUNT[i],rep:i+1,reps:3,tone:{type:'swell',rise:r},
+      phases:[{at:1,title:'아주 작게 시작',hint:'속삭이듯 작되 숨소리만 나지 않게 합니다.'},{at:3,title:'서서히 키우기',hint:'지르지 말고 숨으로 밀어 줍니다. 목에 힘이 들어가면 줄입니다.'},{at:6,title:'다시 줄이기',hint:'음정은 그대로 두고 볼륨만 줄입니다.'}]});
+    rest(g6,3);
+  });
+
+  const g7 = mk('적용','내 곡에 적용하기','곡의 쉬운 구절에 적용하고 녹음해서 비교');
+  prep(g7,'구절 정하기','부를 곡에서 가장 편한 한 구절을 정합니다. 지금까지 연습한 것을 하나씩 얹어 세 번 부릅니다.','곡에서 가장 편한 한 구절을 정하세요. 연습한 것을 하나씩 얹어 세 번 부릅니다.',8);
+  add(g7,{kind:'sing',tag:'소리',dur:20,anim:'steady',title:'1. 말하듯, 힘 빼고',hint:'노래하는 힘이 아니라 말하는 힘으로 첫 구절을 부릅니다.',say:'먼저 말하듯 힘을 빼고 불러 보세요.'});
+  add(g7,{kind:'sing',tag:'소리',dur:20,anim:'steady',title:'2. 숨 섞어 부드럽게 이어서',hint:'시작에 숨을 조금 섞고 모음을 끊기지 않게 이어 부릅니다. 끝음은 서서히 줄입니다.',say:'이번에는 숨을 조금 섞고, 끊기지 않게 이어서, 끝음은 서서히 줄이세요.'});
+  add(g7,{kind:'sing',tag:'소리',dur:15,anim:'steady',title:'3. 작게 시작해 서서히',hint:'작게 시작해서 지르지 않고 서서히 감정을 쌓습니다.',say:'마지막으로, 작게 시작해서 지르지 않고 서서히 쌓아 보세요.'});
+  add(g7,{kind:'rest',tag:'쉬기',dur:15,anim:'rest',title:'녹음해서 원곡과 비교하기',hint:'내 녹음과 원곡을 번갈아 들어 보세요. 닮은 점을 찾기보다 내 목에 편하고 마음에 드는 톤을 고릅니다. 천천히 들으려면 일시정지를 누르세요.',say:'녹음해서 원곡과 번갈아 들어 보세요. 내 목에 편한 톤을 고르세요.'});
+}
+
 const ROUTINES = {
   warmup:{label:'워밍업',build:buildWarmup,
     intro:'목소리 높이를 고른 뒤 시작하세요. 이어폰을 쓰면 안내음이 더 잘 들립니다.',
@@ -491,11 +549,14 @@ const ROUTINES = {
   tone:{label:'톤 만들기',build:buildTone,
     intro:'워밍업을 마친 뒤에 시작하세요. 목소리 높이를 고르고, 부를 곡의 쉬운 구절 하나를 떠올려 두세요.',
     doneTitle:'톤 연습 끝',doneHint:'마음에 든 톤을 기억해 두고, 곡에서 그 느낌으로 불러 보세요. 목이 불편하면 쉬어 주세요.'},
+  style:{label:'성시경 스타일',build:buildStyle,
+    intro:'따뜻하고 힘 뺀 발라드 톤의 방향을 잡는 연습입니다. 똑같이 만드는 것이 아닙니다. 워밍업을 마친 뒤에 시작하세요.',
+    doneTitle:'스타일 연습 끝',doneHint:'내 목에 편하고 마음에 드는 톤을 기억해 두세요. 목이 불편하면 쉬어 주세요.'},
   cooldown:{label:'쿨다운',build:buildCooldown,
     intro:'노래를 마친 뒤에 시작하세요. 모든 소리는 작고 편하게 냅니다.',
     doneTitle:'쿨다운 끝',doneHint:'오늘은 목을 아끼세요. 쉰 소리나 통증이 2주 이상 이어지면 이비인후과에 가 보세요.'}
 };
-const ORDER = ['warmup','tone','cooldown'];
+const ORDER = ['warmup','tone','style','cooldown'];
 
 /* timeline */
 let flat = [], TOTAL = 0, routineKey = 'warmup';
