@@ -74,11 +74,11 @@ button{font:inherit; color:inherit}
   background:var(--surface); border:1px solid var(--line); border-radius:14px;
   padding:18px 16px 18px; min-width:0;
 }
-.stage[data-kind="breath"]{--orb-fill:var(--breath-soft); --orb-line:var(--breath)}
+.stage[data-kind="breath"],.stage[data-kind="stretch"]{--orb-fill:var(--breath-soft); --orb-line:var(--breath)}
 .stage[data-kind="sing"]{--orb-fill:var(--accent-soft); --orb-line:var(--accent)}
 
-.steps{display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:6px}
-.steps button{background:none; border:0; padding:4px 0 0; text-align:left; color:var(--muted); font-size:12px; font-weight:500; cursor:pointer; display:grid; gap:6px; min-width:0}
+.steps{display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:4px}
+.steps button{background:none; border:0; padding:4px 0 0; text-align:left; color:var(--muted); font-size:11px; font-weight:500; cursor:pointer; display:grid; gap:6px; min-width:0; word-break:keep-all}
 .steps button[aria-current="step"]{color:var(--fg); font-weight:600}
 .bar{height:4px; background:var(--line); border-radius:2px; overflow:hidden}
 .bar i{display:block; height:100%; width:0; background:var(--accent)}
@@ -263,6 +263,36 @@ function mk(short,name,desc){ const s = {short,name,desc,cues:[]}; steps.push(s)
 function add(s,o){ s.cues.push(Object.assign({lead:0,anim:'steady',tone:null,say:'',phases:null,rep:0,reps:0},o)); }
 const prep = (s,title,hint,say,dur) => add(s,{kind:'prep',tag:'준비',dur,title,hint,say,anim:'rest'});
 const rest = (s,dur,title,hint) => add(s,{kind:'rest',tag:'쉬기',dur,title:title||'숨 고르기',hint:hint||'코로 편하게 숨을 들이쉽니다.',anim:'rest'});
+
+/* 0. 근육 스트레칭 */
+const s0 = mk('스트레칭','근육 스트레칭','목·어깨·턱·혀·가슴·옆구리 풀기');
+const stg = (s,dur,title,hint,say,extra) => add(s,Object.assign({kind:'stretch',tag:'스트레칭',dur:dur,anim:'steady',title:title,hint:hint,say:say},extra||{}));
+prep(s0,'편하게 서기','발을 어깨너비로 벌리고 섭니다. 목은 세게 젖히거나 돌리지 마세요. 아프면 바로 멈춥니다.','발을 어깨너비로 벌리고 서세요. 아프면 바로 멈추세요.',6);
+stg(s0,15,'목 옆선 · 오른쪽','고개를 오른쪽으로 기울이고 왼쪽 어깨는 아래로 내립니다. 어깨를 올리지 않습니다.','고개를 오른쪽으로 기울이고, 왼쪽 어깨는 아래로 내리세요.');
+stg(s0,15,'목 옆선 · 왼쪽','고개를 왼쪽으로 기울이고 오른쪽 어깨는 아래로 내립니다.','이번에는 왼쪽으로 기울이세요.');
+stg(s0,10,'턱 당기기','시선은 정면에 두고 턱을 뒤로 가볍게 당겨 뒷목을 길게 늘립니다.','턱을 가볍게 당겨서 뒷목을 늘리세요.',{rep:1,reps:2});
+rest(s0,3);
+stg(s0,10,'턱 당기기','시선은 정면에 두고 턱을 뒤로 가볍게 당겨 뒷목을 길게 늘립니다.','한 번 더 하세요.',{rep:2,reps:2});
+prep(s0,'어깨 으쓱','어깨를 귀까지 올렸다가 툭 떨어뜨립니다. 다섯 번 합니다.','어깨를 귀까지 올렸다가 툭 떨어뜨리세요.',6);
+for(let i=0;i<5;i++){
+  stg(s0,3,'어깨 으쓱 툭','올릴 때 숨을 들이쉬고, 떨어뜨리며 내쉽니다.',COUNT[i],{anim:'swell',rep:i+1,reps:5});
+}
+stg(s0,12,'어깨 크게 돌리기','어깨를 뒤로 크게 천천히 돌립니다. 가슴이 열리는 느낌으로 합니다.','어깨를 뒤로 크게 돌리세요.');
+stg(s0,15,'턱 근육 풀기','광대 아래 턱 근육을 손가락으로 작은 원을 그리며 풀어 줍니다. 세게 누르지 않습니다.','광대 아래 턱 근육을 손가락으로 부드럽게 문질러 풀어 주세요.');
+prep(s0,'턱 열고 닫기','하품하듯 입을 천천히 열고 닫습니다. 소리가 나거나 아프면 범위를 줄입니다.','하품하듯 입을 천천히 열고 닫으세요.',5);
+for(let i=0;i<5;i++){
+  stg(s0,4,'턱 천천히 열고 닫기','열 때 숨을 들이쉬고, 닫을 때 내쉽니다.',COUNT[i],{anim:'swell',rep:i+1,reps:5});
+}
+stg(s0,10,'혀 늘리기','혀를 앞으로 길게 내밀고 아래턱 쪽으로 늘렸다가 좌우로 천천히 움직입니다.','혀를 길게 내밀고 천천히 좌우로 움직이세요.');
+stg(s0,10,'입술 푸르르','입술을 가볍게 모아 푸르르 떨어 줍니다. 입 주변 힘을 뺍니다.','입술을 푸르르 떨어 주세요.');
+stg(s0,15,'가슴 열기','양손을 등 뒤에서 깍지 끼고 가슴을 펴며 어깨를 뒤로 모읍니다. 허리는 꺾지 않습니다.','양손을 등 뒤에서 깍지 끼고 가슴을 펴세요.');
+stg(s0,15,'옆구리 늘리기 · 오른팔','오른팔을 머리 위로 올려 몸을 왼쪽으로 기울입니다. 앞으로 숙이지 않습니다.','오른팔을 올리고 몸을 왼쪽으로 기울이세요.');
+stg(s0,15,'옆구리 늘리기 · 왼팔','왼팔을 머리 위로 올려 몸을 오른쪽으로 기울입니다. 갈비뼈 옆이 늘어나는 느낌을 찾습니다.','왼팔을 올리고 몸을 오른쪽으로 기울이세요.');
+prep(s0,'하품-한숨','크게 하품하며 들이쉬고 "하아~" 한숨으로 내쉽니다. 목 안이 넓어지는 느낌을 찾습니다.','크게 하품하고, 하아 하며 한숨 쉬듯 내쉬세요.',5);
+for(let i=0;i<3;i++){
+  stg(s0,6,'하품-한숨','목 안쪽이 넓어지는 느낌을 찾습니다.',COUNT[i],{anim:'swell',rep:i+1,reps:3,
+    phases:[{at:0,title:'하품하며 들이쉬기',hint:'입을 크게 열고 코와 입으로 들이쉽니다.'},{at:3,title:'하아~ 한숨으로 내쉬기',hint:'힘을 빼고 편하게 소리 내어 내쉽니다.'}]});
+}
 
 /* 1. 호흡 */
 const s1 = mk('호흡','호흡 풀기','4초 들이쉬고 10초 "쓰으~"로 내쉬기');
@@ -536,7 +566,7 @@ function buildNotes(c){
 }
 function renderCue(i){
   const c = flat[i], s = steps[c.step];
-  el.stage.dataset.kind = (c.kind === 'breath' || c.kind === 'sing') ? c.kind : 'rest';
+  el.stage.dataset.kind = (c.kind === 'breath' || c.kind === 'sing' || c.kind === 'stretch') ? c.kind : 'rest';
   setText(el.chipStep,'cs','구간 '+(c.step+1)+'/'+steps.length+' · '+s.name);
   if(c.reps){ el.chipRep.hidden = false; setText(el.chipRep,'cr',c.rep+'/'+c.reps+'회'); } else { el.chipRep.hidden = true; }
   setText(el.tag,'tag',c.tag);
