@@ -97,7 +97,7 @@
       kind='<div class="kind">💻 설치형 — 내려받아 컴퓨터에 설치해서 사용해요</div>';
     } else if(p.file){         // 웹 도구 — 브라우저에서 바로 실행
       actions='<a class="btn" href="'+esc(p.file)+'">열기 · 사용하기</a>'+
-              '<a class="btn dl" href="'+esc(p.file)+'" download title="파일 내려받기">⬇</a>';
+              (/\/$/.test(p.file)?'':'<a class="btn dl" href="'+esc(p.file)+'" download title="파일 내려받기">⬇</a>');  // 폴더로 배포된 앱(주소가 / 로 끝남)은 내려받기 버튼 없음
     } else {
       actions='<span class="btn" style="background:var(--muted)">준비 중</span>';
     }
