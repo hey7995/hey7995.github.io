@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<!--PROGRAM
+name: PDF↔JPG 변환기
+desc: PDF를 JPG 이미지로, JPG 사진 여러 장을 PDF 한 파일로 바꿔 주는 무료 웹 변환기. 파일이 서버로 올라가지 않고 내 브라우저 안에서만 처리돼 안전합니다. 설치·회원가입 없이 바로.
+category: 업무·기타
+icon: 🔄
+tags: PDF,JPG,변환,이미지,PDF변환,사진PDF,PDF합치기
+price: 무료
+download:
+file: tools/pdf-jpg.html
+updated: 2026-10
+PROGRAM-->
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PDF↔JPG 변환기 — 설치 없이 브라우저에서 바로</title>
+<meta name="description" content="PDF를 JPG로, JPG를 PDF로 바꿔 주는 무료 웹 변환기. 파일이 서버로 전송되지 않고 내 브라우저에서만 처리됩니다.">
+<style>
+  :root{--bg:#eef1f5;--card:#fff;--ink:#18202c;--muted:#5c6675;--line:#dbe1e9;--brand:#2563eb;--brand2:#1d4ed8;--ok:#1f9d63;--okbg:#e8f6ef;--err:#c0392b;--errbg:#fdecea;--chip:#f3f6fa}
+  @media (prefers-color-scheme:dark){:root{--bg:#0e1319;--card:#161d27;--ink:#e9edf3;--muted:#98a4b3;--line:#2a3441;--brand:#5b8def;--brand2:#7aa2f7;--okbg:#123021;--errbg:#3a1a17;--chip:#1e2733}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic",sans-serif;line-height:1.55}
+  .wrap{max-width:840px;margin:0 auto;padding:22px 16px 70px}
+  h1{font-size:1.45rem;margin:.2rem 0 .3rem}
+  .sub{color:var(--muted);margin:0 0 1.1rem;font-size:.95rem}
+  .privacy{background:var(--okbg);color:var(--ok);border-radius:10px;padding:.55rem .8rem;font-size:.9rem;margin-bottom:1rem}
+  .tabs{display:flex;gap:6px;margin-bottom:12px}
+  .tab{flex:1;padding:.7rem;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer}
+  .tab[aria-selected="true"]{background:var(--brand);border-color:var(--brand);color:#fff}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+  .drop{border:2px dashed var(--line);border-radius:12px;padding:30px 14px;text-align:center;color:var(--muted);cursor:pointer;transition:.15s}
+  .drop.over,.drop:hover,.drop:focus-visible{border-color:var(--brand);background:var(--chip);outline:none}
+  .drop b{display:block;color:var(--ink);font-size:1.05rem;margin-bottom:2px}
+  .opts{display:flex;flex-wrap:wrap;gap:14px 22px;margin:14px 0 4px;align-items:center}
+  .opts label{font-size:.92rem;display:flex;align-items:center;gap:8px}
+  select,input[type=range]{accent-color:var(--brand)}
+  select{padding:.35rem .5rem;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:.92rem}
+  .btn{background:var(--brand);color:#fff;border:0;border-radius:10px;padding:.7rem 1.1rem;font-size:1rem;font-weight:600;cursor:pointer}
+  .btn:hover{background:var(--brand2)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn.ghost{background:var(--chip);color:var(--ink);border:1px solid var(--line)}
+  .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px}
+  .status{margin-top:12px;font-size:.93rem;color:var(--muted);min-height:1.4em}
+  .status.err{color:var(--err);background:var(--errbg);padding:.5rem .7rem;border-radius:8px}
+  progress{width:100%;height:10px;margin-top:8px;accent-color:var(--brand)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-top:14px}
+  .item{border:1px solid var(--line);border-radius:10px;padding:6px;background:var(--chip);text-align:center;font-size:.8rem;position:relative}
+  .item canvas,.item img{width:100%;height:150px;object-fit:contain;background:#fff;border-radius:6px;display:block}
+  .item .nm{margin:5px 0 3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
+  .item a,.item button{font-size:.78rem;color:var(--brand);text-decoration:none;background:none;border:0;cursor:pointer;padding:2px 4px}
+  .item .ctl{display:flex;justify-content:center;gap:2px}
+  .item .badge{position:absolute;top:10px;left:10px;background:rgba(0,0,0,.65);color:#fff;border-radius:6px;padding:0 6px;font-size:.72rem}
+  .hidden{display:none}
+  footer{margin-top:22px;color:var(--muted);font-size:.82rem;text-align:center}
+  a{color:var(--brand)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🔄 PDF↔JPG 변환기</h1>
+  <p class="sub">PDF는 JPG 사진으로, JPG 사진은 PDF 한 파일로. 설치 없이 바로 쓰세요.</p>
+  <div class="privacy">🔒 파일이 서버로 전송되지 않습니다. 모든 변환은 내 브라우저 안에서만 이루어집니다.</div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-p2j" aria-selected="true">PDF → JPG</button>
+    <button class="tab" role="tab" id="tab-j2p" aria-selected="false">JPG → PDF</button>
+  </div>
+
+  <!-- PDF → JPG -->
+  <section class="card" id="p-p2j">
+    <div class="drop" id="drop-p2j" tabindex="0" role="button" aria-label="PDF 파일 선택">
+      <b>PDF 파일을 여기에 끌어다 놓거나 클릭해서 선택</b>
+      <span>PDF 한 개 (페이지마다 JPG 한 장씩 만들어집니다)</span>
+    </div>
+    <input type="file" id="file-p2j" accept="application/pdf,.pdf" class="hidden">
+    <div class="opts">
+      <label>해상도
+        <select id="dpi">
+          <option value="100">100 dpi (작은 용량)</option>
+          <option value="150" selected>150 dpi (기본)</option>
+          <option value="200">200 dpi (선명)</option>
+          <option value="300">300 dpi (인쇄용)</option>
+        </select>
+      </label>
+      <label>품질 <input type="range" id="q-p2j" min="50" max="100" value="90"> <span id="q-p2j-v">90</span></label>
+    </div>
+    <div class="row">
+      <button class="btn" id="go-p2j" disabled>JPG로 변환</button>
+      <button class="btn ghost hidden" id="zip-p2j">전체 ZIP으로 받기</button>
+    </div>
+    <progress id="prog-p2j" class="hidden" value="0" max="1"></progress>
+    <div class="status" id="st-p2j">PDF 파일을 선택하세요.</div>
+    <div class="grid" id="grid-p2j"></div>
+  </section>
+
+  <!-- JPG → PDF -->
+  <section class="card hidden" id="p-j2p">
+    <div class="drop" id="drop-j2p" tabindex="0" role="button" aria-label="이미지 파일 선택">
+      <b>사진을 여기에 끌어다 놓거나 클릭해서 선택</b>
+      <span>JPG·PNG·WebP·BMP 등 여러 장 선택 가능 (목록 순서대로 PDF 페이지가 됩니다)</span>
+    </div>
+    <input type="file" id="file-j2p" accept="image/*" multiple class="hidden">
+    <div class="opts">
+      <label>페이지 크기
+        <select id="pgsize">
+          <option value="fit" selected>이미지 크기 그대로</option>
+          <option value="a4">A4 용지에 맞춤</option>
+        </select>
+      </label>
+      <label>이미지 품질 <input type="range" id="q-j2p" min="50" max="100" value="92"> <span id="q-j2p-v">92</span></label>
+    </div>
+    <div class="row">
+      <button class="btn" id="go-j2p" disabled>PDF로 변환</button>
+      <button class="btn ghost hidden" id="clear-j2p">목록 비우기</button>
+    </div>
+    <progress id="prog-j2p" class="hidden" value="0" max="1"></progress>
+    <div class="status" id="st-j2p">사진을 선택하세요.</div>
+    <div class="grid" id="grid-j2p"></div>
+  </section>
+
+  <footer>변환 결과는 이 페이지를 닫으면 사라집니다. · 암호가 걸린 PDF는 암호를 입력하면 변환할 수 있습니다.</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var MAX_PIXELS = 24e6; // 한 페이지 최대 화소 수 (브라우저 메모리 보호)
+
+  if (window.pdfjsLib) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+
+  /* ---------- 공통 ---------- */
+  function setStatus(id, msg, isErr) {
+    var el = $(id); el.textContent = msg; el.className = 'status' + (isErr ? ' err' : '');
+  }
+  function setProgress(id, v, max) {
+    var p = $(id); p.classList.remove('hidden'); p.max = max; p.value = v;
+  }
+  function download(blob, name) {
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+  }
+  function baseName(n) { return n.replace(/\.[^.]+$/, ''); }
+  function pad(i, n) { var s = String(i); while (s.length < n) s = '0' + s; return s; }
+  function canvasToBlob(canvas, q) {
+    return new Promise(function (res, rej) {
+      canvas.toBlob(function (b) { b ? res(b) : rej(new Error('이미지 생성 실패')); }, 'image/jpeg', q);
+    });
+  }
+  function bindDrop(dropEl, inputEl, onFiles) {
+    dropEl.addEventListener('click', function () { inputEl.click(); });
+    dropEl.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); inputEl.click(); }
+    });
+    ['dragenter', 'dragover'].forEach(function (ev) {
+      dropEl.addEventListener(ev, function (e) { e.preventDefault(); dropEl.classList.add('over'); });
+    });
+    ['dragleave', 'drop'].forEach(function (ev) {
+      dropEl.addEventListener(ev, function (e) { e.preventDefault(); dropEl.classList.remove('over'); });
+    });
+    dropEl.addEventListener('drop', function (e) { onFiles(Array.prototype.slice.call(e.dataTransfer.files)); });
+    inputEl.addEventListener('change', function () { onFiles(Array.prototype.slice.call(inputEl.files)); inputEl.value = ''; });
+  }
+
+  /* ---------- 탭 ---------- */
+  function showTab(which) {
+    var p2j = which === 'p2j';
+    $('tab-p2j').setAttribute('aria-selected', p2j);
+    $('tab-j2p').setAttribute('aria-selected', !p2j);
+    $('p-p2j').classList.toggle('hidden', !p2j);
+    $('p-j2p').classList.toggle('hidden', p2j);
+  }
+  $('tab-p2j').addEventListener('click', function () { showTab('p2j'); });
+  $('tab-j2p').addEventListener('click', function () { showTab('j2p'); });
+
+  /* ---------- PDF → JPG ---------- */
+  var pdfFile = null, results = [], busyP = false;
+  $('q-p2j').addEventListener('input', function () { $('q-p2j-v').textContent = this.value; });
+
+  bindDrop($('drop-p2j'), $('file-p2j'), function (files) {
+    var f = files.filter(function (x) { return /\.pdf$/i.test(x.name) || x.type === 'application/pdf'; })[0];
+    if (!f) { setStatus('st-p2j', 'PDF 파일만 선택할 수 있습니다.', true); return; }
+    pdfFile = f; clearResults();
+    $('go-p2j').disabled = false;
+    setStatus('st-p2j', '선택됨: ' + f.name + ' (' + (f.size / 1048576).toFixed(1) + ' MB) — "JPG로 변환"을 누르세요.');
+  });
+
+  function clearResults() {
+    results = []; $('grid-p2j').innerHTML = ''; $('zip-p2j').classList.add('hidden'); $('prog-p2j').classList.add('hidden');
+  }
+
+  async function openPdf(buf) {
+    var pw;
+    for (;;) {
+      try {
+        var task = pdfjsLib.getDocument({ data: buf.slice(0), password: pw });
+        return await task.promise;
+      } catch (e) {
+        if (e && e.name === 'PasswordException') {
+          pw = prompt(e.code === 2 ? '암호가 틀렸습니다. 다시 입력하세요.' : '암호가 걸린 PDF입니다. 암호를 입력하세요.');
+          if (pw === null) throw new Error('암호 입력이 취소되었습니다.');
+        } else { throw e; }
+      }
+    }
+  }
+
+  $('go-p2j').addEventListener('click', async function () {
+    if (!pdfFile || busyP) return;
+    if (!window.pdfjsLib) { setStatus('st-p2j', '변환 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인하고 새로고침하세요.', true); return; }
+    busyP = true; $('go-p2j').disabled = true; clearResults();
+    try {
+      setStatus('st-p2j', 'PDF를 여는 중…');
+      var buf = await pdfFile.arrayBuffer();
+      var pdf = await openPdf(buf);
+      var total = pdf.numPages, digits = Math.max(3, String(total).length);
+      var dpi = +$('dpi').value, q = +$('q-p2j').value / 100, stem = baseName(pdfFile.name);
+      var downscaled = false;
+      for (var i = 1; i <= total; i++) {
+        setStatus('st-p2j', '변환 중… ' + i + ' / ' + total + ' 페이지');
+        setProgress('prog-p2j', i - 1, total);
+        var page = await pdf.getPage(i);
+        var scale = dpi / 72;
+        var vp = page.getViewport({ scale: scale });
+        if (vp.width * vp.height > MAX_PIXELS) {
+          scale *= Math.sqrt(MAX_PIXELS / (vp.width * vp.height));
+          vp = page.getViewport({ scale: scale }); downscaled = true;
+        }
+        var canvas = document.createElement('canvas');
+        canvas.width = Math.floor(vp.width); canvas.height = Math.floor(vp.height);
+        var ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height); // JPG는 투명 불가 → 흰 배경
+        await page.render({ canvasContext: ctx, viewport: vp }).promise;
+        var blob = await canvasToBlob(canvas, q);
+        var name = stem + '_' + pad(i, digits) + '.jpg';
+        results.push({ name: name, blob: blob });
+        addResultItem(name, blob, canvas, i);
+        canvas.width = canvas.height = 0; // 메모리 해제
+        page.cleanup();
+      }
+      setProgress('prog-p2j', total, total);
+      setStatus('st-p2j', '완료! ' + total + '장의 JPG가 만들어졌습니다.' +
+        (downscaled ? ' (너무 큰 페이지는 메모리 보호를 위해 해상도가 자동으로 낮춰졌습니다.)' : ''));
+      if (total > 1) $('zip-p2j').classList.remove('hidden');
+      pdf.destroy();
+    } catch (e) {
+      setStatus('st-p2j', '변환 실패: ' + (e && e.message ? e.message : e), true);
+    } finally { busyP = false; $('go-p2j').disabled = false; }
+  });
+
+  function addResultItem(name, blob, srcCanvas, idx) {
+    var item = document.createElement('div'); item.className = 'item';
+    var th = document.createElement('canvas');
+    var r = 150 / srcCanvas.height; th.width = Math.max(1, Math.round(srcCanvas.width * r)); th.height = 150;
+    th.getContext('2d').drawImage(srcCanvas, 0, 0, th.width, th.height);
+    var badge = document.createElement('span'); badge.className = 'badge'; badge.textContent = idx;
+    var nm = document.createElement('div'); nm.className = 'nm'; nm.textContent = name; nm.title = name;
+    var a = document.createElement('a'); a.textContent = '다운로드 (' + Math.round(blob.size / 1024) + ' KB)';
+    a.href = URL.createObjectURL(blob); a.download = name;
+    item.appendChild(th); item.appendChild(badge); item.appendChild(nm); item.appendChild(a);
+    $('grid-p2j').appendChild(item);
+  }
+
+  $('zip-p2j').addEventListener('click', async function () {
+    if (!window.JSZip || !results.length) return;
+    var btn = this; btn.disabled = true; var old = btn.textContent; btn.textContent = 'ZIP 만드는 중…';
+    try {
+      var zip = new JSZip();
+      results.forEach(function (r) { zip.file(r.name, r.blob); });
+      var blob = await zip.generateAsync({ type: 'blob', compression: 'STORE' });
+      download(blob, baseName(pdfFile.name) + '_jpg.zip');
+    } catch (e) { setStatus('st-p2j', 'ZIP 생성 실패: ' + e.message, true); }
+    btn.disabled = false; btn.textContent = old;
+  });
+
+  /* ---------- JPG → PDF ---------- */
+  var images = []; // {file, url}
+  var busyJ = false;
+  $('q-j2p').addEventListener('input', function () { $('q-j2p-v').textContent = this.value; });
+
+  bindDrop($('drop-j2p'), $('file-j2p'), function (files) {
+    var imgs = files.filter(function (f) { return /^image\//.test(f.type) || /\.(jpe?g|png|webp|bmp|gif)$/i.test(f.name); });
+    if (!imgs.length) { setStatus('st-j2p', '이미지 파일(JPG, PNG, WebP 등)만 선택할 수 있습니다.', true); return; }
+    imgs.sort(function (a, b) { return a.name.localeCompare(b.name, undefined, { numeric: true }); });
+    imgs.forEach(function (f) { images.push({ file: f, url: URL.createObjectURL(f) }); });
+    renderList();
+  });
+
+  $('clear-j2p').addEventListener('click', function () {
+    images.forEach(function (x) { URL.revokeObjectURL(x.url); });
+    images = []; renderList();
+  });
+
+  function renderList() {
+    var grid = $('grid-j2p'); grid.innerHTML = '';
+    images.forEach(function (x, i) {
+      var item = document.createElement('div'); item.className = 'item';
+      var img = document.createElement('img'); img.src = x.url; img.alt = x.file.name;
+      var badge = document.createElement('span'); badge.className = 'badge'; badge.textContent = i + 1;
+      var nm = document.createElement('div'); nm.className = 'nm'; nm.textContent = x.file.name; nm.title = x.file.name;
+      var ctl = document.createElement('div'); ctl.className = 'ctl';
+      [['◀', '앞으로', -1], ['▶', '뒤로', 1]].forEach(function (c) {
+        var b = document.createElement('button'); b.textContent = c[0]; b.title = c[1] + ' 이동';
+        b.disabled = (i + c[2] < 0 || i + c[2] >= images.length);
+        b.addEventListener('click', function () {
+          var t = images[i + c[2]]; images[i + c[2]] = images[i]; images[i] = t; renderList();
+        });
+        ctl.appendChild(b);
+      });
+      var rm = document.createElement('button'); rm.textContent = '삭제';
+      rm.addEventListener('click', function () { URL.revokeObjectURL(x.url); images.splice(i, 1); renderList(); });
+      ctl.appendChild(rm);
+      item.appendChild(img); item.appendChild(badge); item.appendChild(nm); item.appendChild(ctl);
+      grid.appendChild(item);
+    });
+    $('go-j2p').disabled = !images.length;
+    $('clear-j2p').classList.toggle('hidden', !images.length);
+    $('prog-j2p').classList.add('hidden');
+    setStatus('st-j2p', images.length ? images.length + '장 선택됨 — 순서를 확인하고 "PDF로 변환"을 누르세요.' : '사진을 선택하세요.');
+  }
+
+  function loadImage(url) {
+    return new Promise(function (res, rej) {
+      var im = new Image();
+      im.onload = function () { res(im); };
+      im.onerror = function () { rej(new Error('이미지를 읽을 수 없습니다.')); };
+      im.src = url;
+    });
+  }
+
+  $('go-j2p').addEventListener('click', async function () {
+    if (!images.length || busyJ) return;
+    if (!window.jspdf) { setStatus('st-j2p', '변환 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인하고 새로고침하세요.', true); return; }
+    busyJ = true; $('go-j2p').disabled = true;
+    try {
+      var q = +$('q-j2p').value / 100, mode = $('pgsize').value, doc = null, n = images.length;
+      for (var i = 0; i < n; i++) {
+        setStatus('st-j2p', '변환 중… ' + (i + 1) + ' / ' + n + ' (' + images[i].file.name + ')');
+        setProgress('prog-j2p', i, n);
+        var im = await loadImage(images[i].url);
+        var w = im.naturalWidth, h = im.naturalHeight, s = 1;
+        if (w * h > MAX_PIXELS) { s = Math.sqrt(MAX_PIXELS / (w * h)); w = Math.floor(w * s); h = Math.floor(h * s); }
+        // 캔버스를 거치면 사진 회전 정보가 반영되고, 투명 PNG는 흰 배경이 된다
+        var c = document.createElement('canvas'); c.width = w; c.height = h;
+        var cx = c.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, w, h); cx.drawImage(im, 0, 0, w, h);
+        var data = c.toDataURL('image/jpeg', q);
+        c.width = c.height = 0;
+
+        var pw, ph, x = 0, y = 0, dw, dh;
+        if (mode === 'a4') {
+          var land = w > h; pw = land ? 297 : 210; ph = land ? 210 : 297;
+          var m = 8, r = Math.min((pw - 2 * m) / w, (ph - 2 * m) / h);
+          dw = w * r; dh = h * r; x = (pw - dw) / 2; y = (ph - dh) / 2;
+        } else { pw = w * 0.264583; ph = h * 0.264583; dw = pw; dh = ph; } // px → mm (96dpi 기준)
+        var orient = pw > ph ? 'l' : 'p';
+        if (!doc) doc = new jspdf.jsPDF({ orientation: orient, unit: 'mm', format: [pw, ph], compress: true });
+        else doc.addPage([pw, ph], orient);
+        doc.addImage(data, 'JPEG', x, y, dw, dh);
+      }
+      setProgress('prog-j2p', n, n);
+      var blob = doc.output('blob');
+      var out = (n === 1 ? baseName(images[0].file.name) : 'merged') + '.pdf';
+      download(blob, out);
+      setStatus('st-j2p', '완료! ' + n + '페이지 PDF(' + (blob.size / 1048576).toFixed(1) + ' MB)를 저장했습니다: ' + out);
+    } catch (e) {
+      setStatus('st-j2p', '변환 실패: ' + (e && e.message ? e.message : e), true);
+    } finally { busyJ = false; $('go-j2p').disabled = !images.length; }
+  });
+})();
+</script>
+</body>
+</html>
