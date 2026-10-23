@@ -9,7 +9,7 @@
 - 성시경 스타일(약 7분): 따뜻하고 힘 뺀 발라드 톤의 방향을 잡는 연습. 특정 가수와 똑같이 만드는 연습이 아닙니다.
 - 쿨다운(약 7분): 발성으로 내려오기, 마무리 스트레칭, 호흡 정리와 휴식
 
-- 주소: https://hey7995.github.io/ballad-warmup/
+- 주소: https://hey7995.github.io/tools/ballad-warmup/
 - 아이폰: Safari로 열고 공유 버튼 → "홈 화면에 추가"
 - 안드로이드: Chrome으로 열고 메뉴 → "앱 설치"
 - 컴퓨터: Chrome 또는 Edge 주소창의 설치 아이콘

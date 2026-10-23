@@ -18,7 +18,7 @@ window.PROGRAMS = [
     icon: "🎤",
     tags: ["보컬트레이닝", "발라드", "목풀기", "발성", "스트레칭", "쿨다운"],
     price: "무료",
-    file: "ballad-warmup/",
+    file: "tools/ballad-warmup/",
     updated: "2026-10"
   },
   {
