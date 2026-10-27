@@ -1,6 +1,6 @@
 /* 발라드 워밍업 서비스 워커
    파일을 고쳐서 다시 올릴 때는 아래 CACHE 이름의 숫자를 올려 주세요. (예: v2) */
-const CACHE = 'ballad-warmup-v6';
+const CACHE = 'ballad-warmup-v7';
 const CORE = [
   './',
   './index.html',

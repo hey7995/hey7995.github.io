@@ -65,11 +65,14 @@ console.log(`programs.js 생성 완료 — 프로그램 ${items.length}개`);
    각 프로그램 페이지에 아래 두 블록을 자동으로 넣거나 갱신합니다. (블록 안은 직접 고치지 마세요)
      <!--SEO:auto--> ... <!--/SEO:auto-->       : 설명·공유 미리보기(og) 태그
      만든이: 컴매니저 (helpcomkr.com 링크)       : 페이지 맨 아래
+     <!--ADS:auto--> ... <!--/ADS:auto-->       : 구글 애드센스 코드 (ADSENSE_CLIENT)
    공유 이미지를 따로 쓰려면 PROGRAM 메타에  ogimage: 이미지주소  를 적으세요. */
 const SITE = 'https://tools.helpcomkr.com/';
 const HOME = 'https://helpcomkr.com/';
 const SITE_NAME = '생활에 도움이 되는 프로그램';
 const DEFAULT_OG = SITE + 'assets/og-default.png';
+// 구글 애드센스 게시자 ID. 비워 두면('') 광고 코드를 넣지 않습니다.
+const ADSENSE_CLIENT = 'ca-pub-2029767844815756';
 const exists = p => access(p).then(() => true, () => false);
 const attr = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 const CREDIT_LINK = `만든이: <a href="${HOME}" target="_blank" rel="noopener" style="color:inherit"><b>컴매니저</b></a>`;
@@ -118,12 +121,20 @@ async function withSeo(html, p) {
   return i < 0 ? html : html.slice(0, i) + block + html.slice(i);
 }
 
+function withAds(html) {
+  html = html.replace(/[ \t]*<!--ADS:auto-->[\s\S]*?<!--\/ADS:auto-->\n?/, '');
+  if (!ADSENSE_CLIENT || html.includes(ADSENSE_CLIENT)) return html;
+  const block = `<!--ADS:auto--><script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}" crossorigin="anonymous"></script><!--/ADS:auto-->\n`;
+  const i = html.indexOf('</head>');
+  return i < 0 ? html : html.slice(0, i) + block + html.slice(i);
+}
+
 let touched = 0;
 for (const p of items) {
   const target = p.file.endsWith('/') ? path.join(p.file, 'index.html') : p.file;
   if (!(await exists(target))) { console.warn('페이지 없음(건너뜀):', target); continue; }
   const before = await readFile(target, 'utf8');
-  const after = withCredit(await withSeo(before, p));
+  const after = withAds(withCredit(await withSeo(before, p)));
   if (after !== before) { await writeFile(target, after, 'utf8'); touched++; }
 }
 console.log(`검색·공유 태그와 만든이 링크 점검 완료 — 수정한 페이지 ${touched}개`);
