@@ -66,7 +66,7 @@ console.log(`programs.js 생성 완료 — 프로그램 ${items.length}개`);
      <!--SEO:auto--> ... <!--/SEO:auto-->       : 설명·공유 미리보기(og) 태그
      만든이: 컴매니저 (helpcomkr.com 링크)       : 페이지 맨 아래
    공유 이미지를 따로 쓰려면 PROGRAM 메타에  ogimage: 이미지주소  를 적으세요. */
-const SITE = 'https://hey7995.github.io/';
+const SITE = 'https://tools.helpcomkr.com/';
 const HOME = 'https://helpcomkr.com/';
 const SITE_NAME = '생활에 도움이 되는 프로그램';
 const DEFAULT_OG = SITE + 'assets/og-default.png';

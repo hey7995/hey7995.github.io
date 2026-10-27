@@ -219,7 +219,7 @@
       var res=await fetch('_publish.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({filename:fname,content:content})});
       var data=await res.json();
       if(data.ok){
-        var base=(g('f_site')||'https://hey7995.github.io').replace(/\/+$/,'');
+        var base=(g('f_site')||'https://tools.helpcomkr.com').replace(/\/+$/,'');
         var url=base+'/'+data.file;
         pubSay('✅ <b>발행 완료!</b> 1~2분 뒤 반영됩니다.<br>주소: <a href="'+url+'" target="_blank" rel="noopener">'+url+'</a>');
       }else{
