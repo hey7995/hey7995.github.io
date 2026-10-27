@@ -1,0 +1,765 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>전기기사 학습장</title>
+<meta name="theme-color" content="#EDF0F5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1520" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="전기기사">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+KR:wght@400;500;700;800&display=swap">
+<style>:root{color-scheme:light}html{padding-top:env(safe-area-inset-top,0px)}[hidden]{display:none!important}img{max-width:100%}</style>
+<style>
+/* Layout: one-column notebook with a fixed bottom tab bar; a 24-cell day strip (4 weeks x 6 study days) is the signature element. */
+:root{
+  --bg:#EDF0F5; --surface:#FFFFFF; --ink:#16202E; --muted:#586478; --line:#D3D9E3;
+  --accent:#2F5BEA; --accent-ink:#FFFFFF; --good:#1B8553; --warn:#9A6A12; --bad:#BE3A3A;
+  --hl:#FFE58F; --soft:#F4F6FA; --grid:rgba(22,32,46,.045);
+  --f-body:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0E1520; --surface:#172131; --ink:#E5EBF4; --muted:#94A1B6; --line:#2A3548;
+    --accent:#7D9CFF; --accent-ink:#0E1520; --good:#4CC38A; --warn:#E3B04B; --bad:#F07A7A;
+    --hl:#5A4A12; --soft:#1C283B; --grid:rgba(229,235,244,.045); color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background-color:var(--bg); color:var(--ink); font-family:var(--f-body); font-size:15px; line-height:1.6;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;
+}
+.wrap{max-width:860px;margin:0 auto;padding-block:16px calc(92px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:6px 14px;margin-bottom:12px}
+h1{font-size:26px;font-weight:800;letter-spacing:-.02em;margin:0;text-wrap:balance}
+.sub{color:var(--muted);font-size:13px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:3px 10px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--muted);white-space:nowrap}
+.chip i{width:7px;height:7px;border-radius:50%;background:var(--warn);display:inline-block}
+.chip.ok i{background:var(--good)}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:10;display:flex;gap:2px;padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px));background:var(--surface);border-top:1px solid var(--line)}
+nav.tabs button{flex:1;border:0;background:transparent;padding:8px 2px;border-radius:8px;font-weight:700;font-size:13px;color:var(--muted);min-width:0}
+nav.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+nav.tabs .n{font-family:var(--f-mono);font-size:11px;margin-left:3px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px;min-width:0}
+.panel>h2{margin:0 0 10px;font-size:16px;font-weight:800}
+h3{margin:0 0 6px;font-size:14px;font-weight:700}
+.hint{color:var(--muted);font-size:13px;margin:0 0 10px}
+.strip{display:flex;flex-wrap:wrap;gap:6px 14px}
+.wk{display:flex;gap:3px}
+.seg{width:22px;height:28px;border-radius:3px;background:var(--soft);border:1px solid var(--line);padding:0;display:block}
+.seg.on{border-color:transparent}
+.seg.l1{background:color-mix(in srgb,var(--accent) 22%,var(--surface))}
+.seg.l2{background:color-mix(in srgb,var(--accent) 36%,var(--surface))}
+.seg.l3{background:color-mix(in srgb,var(--accent) 52%,var(--surface))}
+.seg.l4{background:color-mix(in srgb,var(--accent) 74%,var(--surface))}
+.seg.l5{background:var(--accent)}
+.seg.next{border:2px solid var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--muted);margin-top:8px;align-items:center}
+.legend .seg{width:14px;height:14px;display:inline-block;vertical-align:-3px;margin-right:4px}
+.stats{display:flex;flex-wrap:wrap;gap:8px 28px;margin-top:14px}
+.stat b{display:block;font-family:var(--f-mono);font-size:22px;font-weight:500;line-height:1.2}
+.stat span{font-size:12px;color:var(--muted)}
+.btn{border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:8px;font-weight:700;font-size:14px}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.sm{padding:3px 10px;font-size:12px}
+.btn.warn{border-color:var(--bad);color:var(--bad)}
+.btn:disabled{opacity:.5;cursor:default}
+input[type=text],input[type=number],input[type=date],input[type=email],input[type=password],select,textarea{width:100%;min-width:0;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+textarea{resize:vertical;min-height:64px}
+label.f{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted);min-width:0}
+.row{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.row.two{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.act{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center}
+.rate{display:inline-flex;flex-wrap:wrap;gap:3px}
+.rate button{width:30px;height:32px;border:1px solid var(--line);background:var(--surface);border-radius:6px;font-family:var(--f-mono)}
+.rate button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+.wkhead{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;align-items:baseline;margin:6px 0 8px}
+.wkhead h2{margin:0;font-size:16px;font-weight:800}
+.day{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:var(--surface)}
+.day.done{background:var(--soft)}
+.dh{display:flex;align-items:center;gap:10px;min-width:0}
+.dh .dn{font-family:var(--f-mono);font-size:13px;color:var(--muted);flex:none}
+.dh .tt{font-weight:700;flex:1;min-width:0}
+.dh .plan{font-family:var(--f-mono);font-size:12px;color:var(--muted);flex:none}
+.ck{width:22px;height:22px;flex:none;accent-color:var(--accent)}
+.df{display:grid;gap:8px 10px;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));margin-top:8px;align-items:end}
+.df .memo{grid-column:1/-1}
+.of{display:flex;align-items:center;gap:6px}
+.of span{font-family:var(--f-mono);color:var(--muted);white-space:nowrap}
+.dl{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:10px 12px;margin-bottom:8px}
+.dl.done{background:var(--soft)}
+.dl .dn{font-family:var(--f-mono);font-size:13px;color:var(--muted);flex:none;width:34px}
+.dl .tt{font-weight:700;flex:1;min-width:0}
+.dl .st{font-family:var(--f-mono);font-size:12px;color:var(--muted);flex:none}
+.dl.next{border:2px solid var(--ink)}
+.w{border:1px solid var(--line);border-radius:8px;padding:12px;margin-bottom:10px;background:var(--surface);min-width:0}
+.w.grad{background:var(--soft)}
+.wh{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin-bottom:6px}
+.tag{font-family:var(--f-mono);font-size:12px;padding:1px 8px;border-radius:4px;border:1px solid var(--line);background:var(--soft)}
+.tag.hl{background:var(--hl);border-color:transparent}
+.tag.good{color:var(--good);border-color:var(--good);background:transparent}
+.tag.bad{color:var(--bad);border-color:var(--bad);background:transparent}
+.q{font-weight:700;overflow-wrap:anywhere}
+.qa{display:grid;gap:4px 14px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-top:6px;font-size:14px}
+.qa dt{font-size:12px;color:var(--muted)}
+.qa dd{margin:0;overflow-wrap:anywhere;white-space:pre-wrap}
+.rt{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:10px;padding-top:8px;border-top:1px dashed var(--line)}
+.rt>div{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.rt .lbl{font-size:12px;color:var(--muted)}
+.ox{display:inline-flex;gap:3px}
+.ox button{padding:3px 12px;border:1px solid var(--line);background:var(--surface);border-radius:5px;font-family:var(--f-mono)}
+.ox button.o[aria-pressed="true"]{background:var(--good);border-color:var(--good);color:var(--bg)}
+.ox button.x[aria-pressed="true"]{background:var(--bad);border-color:var(--bad);color:var(--bg)}
+.filters{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin-bottom:12px}
+.empty{color:var(--muted);padding:18px 4px;text-align:center}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;white-space:nowrap}
+th{font-size:12px;color:var(--muted);font-weight:500}
+td.n,th.n{text-align:right;font-family:var(--f-mono)}
+.bar{height:8px;background:var(--soft);border-radius:4px;overflow:hidden;min-width:70px}
+.bar i{display:block;height:100%;background:var(--accent)}
+ul.plain{margin:0;padding-left:18px}
+ul.plain li{margin-bottom:4px;overflow-wrap:anywhere}
+ol.min{margin:0;padding-left:20px}
+ol.min li{margin-bottom:2px}
+ol.min b{font-family:var(--f-mono);font-weight:500;margin-right:6px}
+textarea.out{font-family:var(--f-mono);font-size:12px;min-height:160px;margin-top:10px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:8px;font-size:14px;z-index:20;max-width:calc(100% - 32px)}
+/* textbook */
+.back{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.dtitle{font-size:22px;font-weight:800;letter-spacing:-.01em;margin:0 0 4px;text-wrap:balance}
+.sec{margin:16px 0 6px;font-size:13px;font-weight:800;color:var(--accent);letter-spacing:.02em}
+.concept{margin:0;padding-left:20px}
+.concept li{margin-bottom:6px}
+.formula{background:var(--soft);border-left:3px solid var(--accent);padding:7px 12px;margin-bottom:4px;border-radius:0 6px 6px 0;font-family:var(--f-mono);font-size:13.5px;overflow-x:auto;white-space:nowrap}
+.example{background:var(--soft);border-left:3px solid var(--warn);padding:7px 12px;margin-bottom:4px;border-radius:0 6px 6px 0}
+.pq{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:var(--surface)}
+.ans{margin-top:8px;padding:8px 10px;background:var(--soft);border-radius:6px;font-size:14px;overflow-wrap:anywhere}
+.ans .lbl{font-size:12px;color:var(--muted);margin-right:6px}
+.mk{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;align-items:center}
+.mk .btn[aria-pressed="true"].o{background:var(--good);border-color:var(--good);color:var(--bg)}
+.mk .btn[aria-pressed="true"].x{background:var(--bad);border-color:var(--bad);color:var(--bg)}
+.tp{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-top:6px;font-size:12px;color:var(--muted)}
+.tp button{padding:2px 9px;border:1px solid var(--line);background:var(--surface);border-radius:5px;font-size:12px}
+.tp button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.fs{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:14px}
+.fs .k{flex:none;width:96px;color:var(--muted);font-size:12px;padding-top:2px}
+.fs .v{font-family:var(--f-mono);font-size:13px;overflow-wrap:anywhere}
+sub,sup{line-height:0}
+.install{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between}
+.chk{display:flex;gap:8px;align-items:flex-start;padding:4px 0;font-size:14px}
+@media (max-width:520px){h1{font-size:23px}.panel{padding:12px}.seg{width:17px;height:25px}}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>전기기사 학습장</h1>
+      <div class="sub" id="sub">기초 복구편 · 24일 · 하루 90분</div>
+    </div>
+    <span class="chip" id="mode"><i></i><span>불러오는 중</span></span>
+  </header>
+  <main id="view"></main>
+</div>
+<nav class="tabs" id="tabs" role="tablist" aria-label="메뉴"></nav>
+<div class="toast" id="toast" hidden></div>
+
+<noscript><p style="padding:16px">이 앱은 JavaScript가 필요합니다.</p></noscript>
+<script src="content.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+(function () {
+  "use strict";
+  var C = window.JGISA_CONTENT;
+  if (!C || !C.days) { document.getElementById("view").innerHTML = '<section class="panel"><h2>교재를 불러오지 못했어요</h2><p class="hint">content.js 를 확인해 주세요.</p></section>'; return; }
+  var DAYS = C.days, WEEKS = C.weeks, FSUM = C.formulaSummary || [];
+  var KEY = "jgisa-studylog-v2";
+  var TYPES = { A: "개념 이해 부족", B: "공식 암기 실수", C: "계산 실수", D: "문제 읽기 실수", E: "단위·부호 실수" };
+  var TYPE_SHORT = { A: "개념", B: "공식", C: "계산", D: "읽기", E: "단위" };
+  var PLAN90 = [["10분", "전날 공식과 오답 훑어보기"], ["30분", "교재 개념과 공식 읽기, 공식은 손으로 한 번 쓰기"], ["15분", "예제를 가리고 직접 풀기"], ["25분", "연습문제 풀기 (정답은 다 푼 뒤에 보기)"], ["10분", "채점하고 틀린 문제 확인"]];
+
+  var $ = function (s, el) { return (el || document).querySelector(s); };
+  var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); };
+  var fmt = function (s) { return esc(s).replace(/_\{([^}]*)\}/g, "<sub>$1</sub>").replace(/\^\{([^}]*)\}/g, "<sup>$1</sup>"); };
+  var plain = function (s) { return String(s == null ? "" : s).replace(/_\{([^}]*)\}/g, "$1").replace(/\^\{([^}]*)\}/g, "^$1"); };
+  var pad = function (n) { return String(n).padStart(2, "0"); };
+  var ymd = function (d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); };
+  var today = function () { return ymd(new Date()); };
+  var addDays = function (s, n) { var p = s.split("-").map(Number); return ymd(new Date(p[0], p[1] - 1, p[2] + n)); };
+  var md = function (s) { return s ? s.slice(5).replace("-", "/") : ""; };
+  var dayDiff = function (a, b) { var x = a.split("-").map(Number), y = b.split("-").map(Number); return Math.round((new Date(y[0], y[1] - 1, y[2]) - new Date(x[0], x[1] - 1, x[2])) / 86400000); };
+  var pid = function (d) { return "d" + pad(d); };
+  var uid = function () { return Date.now().toString(36) + Math.random().toString(36).slice(2, 5); };
+  var topic = function (d) { return DAYS[d - 1].title; };
+  var total = function (d) { return DAYS[d - 1].practice.length; };
+  var wkOf = function (d) { return DAYS[d - 1].week; };
+  var N = DAYS.length;
+
+  /* ---------- storage (local first, optional cloud sync) ---------- */
+  var docs = {}, memOnly = false;
+  var tab = "today", studyDay = null, showFormulas = false;
+  var editId = null, delArm = null, shown = {}, outText = "", importPrev = null;
+  var filt = { week: "all", type: "all", status: "open" };
+  var wd = { day: "", type: "C", q: "", mine: "", ans: "", why: "" };
+  var sync = { state: "off", user: null, msg: "" };
+
+  function load() { try { var s = localStorage.getItem(KEY); docs = s ? JSON.parse(s) : {}; } catch (e) { docs = {}; } if (!docs || typeof docs !== "object") docs = {}; }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(docs)); }
+    catch (e) { if (!memOnly) { memOnly = true; toast("이 브라우저는 저장을 막고 있어요. 백업 파일을 자주 내려받아 주세요."); } }
+  }
+  function get(id) { var d = docs[id]; return d && !d._del ? d : null; }
+  function put(id, data) {
+    data = Object.assign({}, data, { _u: Date.now() });
+    docs[id] = data; save(); push(id, data);
+  }
+  function del(id) { put(id, { _del: true }); }
+  function prog(d) { return get(pid(d)) || {}; }
+  function cfg() { return get("cfg") || {}; }
+  function putProg(d, patch) { put(pid(d), Object.assign({}, prog(d), { day: d }, patch)); }
+  function putCfg(patch) { put("cfg", Object.assign({}, cfg(), patch)); }
+
+  function wrongs() {
+    return Object.keys(docs).filter(function (k) { return /^w[a-z0-9]{3,}$/.test(k) && get(k); }).map(function (k) {
+      var o = Object.assign({}, docs[k]); o.id = k;
+      if (!o.created) o.created = today();
+      if (o.r1 === undefined) o.r1 = null;
+      if (o.r2 === undefined) o.r2 = null;
+      o.day = Math.min(N, Math.max(1, +o.day || 1));
+      if (!TYPES[o.type]) o.type = "C";
+      o.q = o.q || "(문제 없음)";
+      return o;
+    });
+  }
+  function grad(w) { return w.r1 === true && w.r2 === true; }
+  function due(w) {
+    var t = today(), out = [];
+    if (w.r1 == null && addDays(w.created, 3) <= t) out.push(1);
+    if (w.r2 == null && addDays(w.created, 7) <= t) out.push(2);
+    return out;
+  }
+  function nextDay() { for (var i = 1; i <= N; i++) if (!prog(i).done) return i; return 0; }
+  function planDate(d) { var s = cfg().start; return s ? addDays(s, d - 1 + Math.floor((d - 1) / 6)) : ""; }
+  function score(d) {
+    var p = prog(d), ks = Object.keys(p.pr || {});
+    if (ks.length) return ks.filter(function (i) { return p.pr[i] === 1; }).length;
+    return p.score == null || p.score === "" ? null : +p.score;
+  }
+  function answered(d) { return Object.keys(prog(d).pr || {}).length; }
+
+  /* ---------- cloud sync (Firebase, optional) ---------- */
+  var fsCol = null, unsub = null, auth = null;
+  function push(id, data) {
+    if (fsCol) fsCol.doc(id).set(data).catch(function () { sync.msg = "일부 변경을 올리지 못했어요. 인터넷 연결 후 자동으로 다시 시도합니다."; });
+  }
+  function loadScript(src) {
+    return new Promise(function (res, rej) { var s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+  }
+  function initSync() {
+    var fc = window.JGISA_FIREBASE;
+    if (!fc || !fc.apiKey) { sync.state = "off"; return; }
+    sync.state = "loading";
+    var base = "https://www.gstatic.com/firebasejs/10.14.1/";
+    loadScript(base + "firebase-app-compat.js").then(function () {
+      return Promise.all([loadScript(base + "firebase-auth-compat.js"), loadScript(base + "firebase-firestore-compat.js")]);
+    }).then(function () {
+      window.firebase.initializeApp(fc);
+      auth = window.firebase.auth();
+      var fs = window.firebase.firestore();
+      sync.state = "signedout"; render();
+      auth.onAuthStateChanged(function (u) {
+        if (u) {
+          sync.user = u; sync.state = "syncing"; render();
+          fsCol = fs.collection("users").doc(u.uid).collection("docs");
+          fsCol.get().then(function (snap) {
+            var remote = {}; snap.forEach(function (d) { remote[d.id] = d.data(); });
+            Object.keys(Object.assign({}, remote, docs)).forEach(function (id) {
+              var l = docs[id], r = remote[id];
+              if (r && (!l || (r._u || 0) > (l._u || 0))) docs[id] = r;
+              else if (l && (!r || (l._u || 0) > (r._u || 0))) fsCol.doc(id).set(l);
+            });
+            save(); sync.state = "synced"; render();
+            if (unsub) unsub();
+            unsub = fsCol.onSnapshot(function (s) {
+              var changed = false;
+              s.docChanges().forEach(function (ch) {
+                var r = ch.doc.data(), l = docs[ch.doc.id];
+                if (!l || (r._u || 0) > (l._u || 0)) { docs[ch.doc.id] = r; changed = true; }
+              });
+              if (changed) { save(); render(); }
+            }, function () { });
+          }).catch(function () { sync.state = "unavailable"; sync.msg = "동기화 서버에 연결하지 못했어요. 이 기기의 기록으로 계속 쓸 수 있어요."; render(); });
+        } else {
+          if (unsub) { unsub(); unsub = null; }
+          fsCol = null; sync.user = null; sync.state = "signedout"; render();
+        }
+      });
+    }).catch(function () { sync.state = "unavailable"; render(); });
+  }
+  function authErr(e) {
+    var m = { "auth/invalid-email": "이메일 형식이 올바르지 않아요.", "auth/missing-password": "비밀번호를 입력해 주세요.", "auth/weak-password": "비밀번호는 6자 이상이어야 해요.", "auth/email-already-in-use": "이미 가입된 이메일이에요. 로그인해 주세요.", "auth/user-not-found": "가입되지 않은 이메일이에요.", "auth/wrong-password": "비밀번호가 맞지 않아요.", "auth/invalid-credential": "이메일 또는 비밀번호가 맞지 않아요.", "auth/too-many-requests": "시도가 너무 많아요. 잠시 후 다시 해 주세요.", "auth/network-request-failed": "인터넷 연결을 확인해 주세요." };
+    return m[e && e.code] || "로그인에 실패했어요. 잠시 후 다시 시도해 주세요.";
+  }
+
+  /* ---------- small ui helpers ---------- */
+  function toast(msg) {
+    var t = $("#toast"); t.textContent = msg; t.hidden = false;
+    clearTimeout(toast.h); toast.h = setTimeout(function () { t.hidden = true; }, 2800);
+  }
+  function ratePick(name, val, attr) {
+    var b = "";
+    for (var i = 1; i <= 5; i++) b += '<button type="button" data-act="' + name + '" ' + attr + ' data-v="' + i + '" aria-pressed="' + (val === i) + '">' + i + "</button>";
+    return '<span class="rate" role="group" aria-label="이해도">' + b + "</span>";
+  }
+  function summaryHtml() {
+    var nd = nextDay(), done = 0, mins = 0, us = [];
+    DAYS.forEach(function (x) { var p = prog(x.n); if (p.done) done++; mins += +p.minutes || 0; if (p.und) us.push(+p.und); });
+    var avg = us.length ? (us.reduce(function (a, b) { return a + b; }, 0) / us.length).toFixed(1) : "–";
+    var open = wrongs().filter(function (w) { return !grad(w); }).length;
+    var strip = "";
+    for (var w = 0; w < 4; w++) {
+      var cells = "";
+      for (var i = 1; i <= 6; i++) {
+        var d = w * 6 + i; if (d > N) break;
+        var p = prog(d);
+        cells += '<button type="button" class="seg' + (p.done ? " on l" + (p.und || 3) : "") + (nd === d ? " next" : "") + '" data-act="open-day" data-day="' + d + '" title="Day ' + d + " · " + esc(plain(topic(d))) + '" aria-label="Day ' + d + '"></button>';
+      }
+      strip += '<div class="wk" aria-label="Week ' + (w + 1) + '">' + cells + "</div>";
+    }
+    return '<div class="strip">' + strip + "</div>" +
+      '<div class="legend"><span><i class="seg"></i>미완료</span><span><i class="seg on l2"></i>이해도 낮음</span><span><i class="seg on l5"></i>이해도 높음</span><span><i class="seg next"></i>다음 진도</span></div>' +
+      '<div class="stats"><div class="stat"><b>' + done + '<small class="mono"> / ' + N + '</small></b><span>완료한 날</span></div>' +
+      '<div class="stat"><b>' + mins + '<small class="mono"> 분</small></b><span>누적 학습 시간</span></div>' +
+      '<div class="stat"><b>' + avg + '</b><span>평균 이해도 (5점)</span></div>' +
+      '<div class="stat"><b>' + open + '</b><span>미졸업 오답</span></div></div>';
+  }
+  function buildReport() {
+    var lines = ["[전기기사 기초복구편 점검 요청]"];
+    var done = DAYS.filter(function (x) { return prog(x.n).done; });
+    var mins = DAYS.reduce(function (s, x) { return s + (+prog(x.n).minutes || 0); }, 0);
+    lines.push("진행: " + done.length + "/" + N + "일 완료, 누적 " + mins + "분");
+    if (done.length) {
+      var last = done[done.length - 1].n, p = prog(last), sc = score(last);
+      lines.push("가장 최근: Day " + last + " (" + plain(topic(last)) + ")" + (p.date ? " " + p.date : "") + ", 이해도 " + (p.und || "-") + "/5, 맞은 개수 " + (sc == null ? "-" : sc) + "/" + total(last) + (p.memo ? ", 메모: " + p.memo : ""));
+    }
+    var weak = done.filter(function (x) { var p = prog(x.n), sc = score(x.n); return (p.und && p.und <= 3) || (sc != null && sc / total(x.n) < 0.7); }).map(function (x) { return "Day " + x.n; });
+    if (weak.length) lines.push("복습이 필요한 날: " + weak.join(", "));
+    var open = wrongs().filter(function (w) { return !grad(w); });
+    lines.push("미졸업 오답 " + open.length + "개" + (open.length ? ":" : ""));
+    open.slice(0, 10).forEach(function (w) { lines.push("- Day " + w.day + " [" + w.type + " " + TYPES[w.type] + "] " + plain(w.q) + " / 내 답: " + (w.mine || "-") + " / 정답: " + plain(w.ans || "-")); });
+    lines.push("요청: 위 기록을 바탕으로 오늘 점검과 다음 진도를 알려주세요.");
+    return lines.join("\n");
+  }
+  function reportPanel() {
+    return '<section class="panel"><h2>Claude에게 점검 요청</h2><p class="hint">현재 기록을 요약해서 복사합니다. Claude 채팅에 붙여넣으면 채점과 다음 진도 안내를 받을 수 있어요.</p>' +
+      '<div class="act" style="margin-top:0"><button class="btn pri" data-act="report">요약 만들기 · 복사</button></div>' +
+      (outText ? '<textarea class="out" id="out" readonly>' + esc(outText) + "</textarea>" : "") + "</section>";
+  }
+
+  /* ---------- wrong-note helpers ---------- */
+  function wrongBySrc(src) { var a = wrongs().filter(function (w) { return w.src === src; }); return a[0] || null; }
+  function untouched(w) { return !w.why && !w.mine && w.r1 == null && w.r2 == null; }
+  function markPractice(n, i, v) {
+    var p = prog(n), pr = Object.assign({}, p.pr || {});
+    if (pr[i] === v) delete pr[i]; else pr[i] = v;
+    putProg(n, { pr: pr });
+    var src = "d" + n + "-" + i, ex = wrongBySrc(src), it = DAYS[n - 1].practice[i];
+    if (pr[i] === 0 && !ex) put("w" + uid(), { day: n, type: "C", q: it.q, mine: "", ans: it.a, why: "", created: today(), r1: null, r2: null, src: src });
+    if (pr[i] !== 0 && ex && untouched(ex)) del(ex.id);
+  }
+
+  /* ---------- views ---------- */
+  function installPanel() {
+    var standalone = window.matchMedia && matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+    var dismissed = false; try { dismissed = localStorage.getItem("jgisa-install-dismissed") === "1"; } catch (e) { }
+    if (standalone || dismissed) return "";
+    var ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    return '<section class="panel"><div class="install"><div style="flex:1;min-width:200px"><h3>홈 화면에 설치하면 앱처럼 쓸 수 있어요</h3><p class="hint" style="margin:0">' +
+      (ios ? "Safari 공유 버튼 → \"홈 화면에 추가\". 설치 전에 입력한 기록은 설치한 앱에 따로 보관되니, 설치한 뒤부터 쓰시거나 백업 파일로 옮기세요." : "설치하면 인터넷 없이도 열려요. 설치 전 기록은 백업 파일로 옮길 수 있어요.") + "</p></div>" +
+      '<div class="act" style="margin:0">' + (window.__installEvt ? '<button class="btn pri" data-act="install">앱 설치</button>' : "") + '<button class="btn sm" data-act="install-dismiss">닫기</button></div></div></section>';
+  }
+  function viewToday() {
+    var nd = nextDay(), h = installPanel();
+    if (sync.state === "signedout") h += '<section class="panel"><h3>로그인하면 어느 기기에서나 같은 기록이 보여요</h3><p class="hint" style="margin:0 0 8px">지금은 이 기기에만 저장되고 있어요.</p><button class="btn pri" data-act="goto-account">로그인 · 가입</button></section>';
+    h += '<section class="panel"><div id="sum">' + summaryHtml() + "</div></section>";
+    if (nd) {
+      var pd = planDate(nd), D = DAYS[nd - 1], ans = answered(nd);
+      h += '<section class="panel"><h2>오늘 진도: Day ' + nd + " · " + fmt(D.title) + "</h2>" +
+        '<p class="hint">Week ' + D.week + " · " + esc(plain(WEEKS[D.week - 1].name)) + (pd ? " · 예정일 " + md(pd) : "") + (ans ? " · 연습문제 " + ans + "/" + total(nd) + " 풀이" : "") + "</p>" +
+        '<ol class="min">' + PLAN90.map(function (p) { return "<li><b>" + p[0] + "</b>" + esc(p[1]) + "</li>"; }).join("") + "</ol>" +
+        '<div class="act"><button class="btn pri" data-act="open-day" data-day="' + nd + '">' + (ans ? "이어서 공부하기" : "Day " + nd + " 시작하기") + "</button></div></section>";
+    } else {
+      h += '<section class="panel"><h2>' + N + '일 과정을 모두 마쳤어요</h2><p class="hint">통계 탭에서 약한 영역을 확인하고, 12월 본과정 준비에 반영하세요.</p></section>';
+    }
+    var dueList = wrongs().filter(function (w) { return !grad(w) && due(w).length; });
+    h += '<section class="panel"><h2>오늘 재풀이할 오답 <span class="mono sub">' + dueList.length + "</span></h2>";
+    if (!dueList.length) h += '<div class="empty">재풀이 시기가 된 오답이 없어요. 틀린 문제는 기록한 날부터 3일 뒤, 7일 뒤에 다시 풉니다.</div>';
+    dueList.forEach(function (w) { h += wrongCard(w, true); });
+    h += "</section>" + reportPanel();
+    return h;
+  }
+
+  function viewStudyList() {
+    var nd = nextDay(), h = "";
+    h += '<section class="panel"><div class="act" style="margin:0"><button class="btn" data-act="open-formulas">공식 요약 (한 장)</button>' + (nd ? '<button class="btn pri" data-act="open-day" data-day="' + nd + '">다음 진도 Day ' + nd + "</button>" : "") + "</div></section>";
+    WEEKS.forEach(function (wkk, wi) {
+      h += '<div class="wkhead"><h2>Week ' + (wi + 1) + " · " + esc(plain(wkk.name)) + "</h2></div>";
+      DAYS.filter(function (x) { return x.week === wi + 1; }).forEach(function (x) {
+        var p = prog(x.n), sc = score(x.n);
+        h += '<button type="button" class="dl' + (p.done ? " done" : "") + (nd === x.n ? " next" : "") + '" data-act="open-day" data-day="' + x.n + '"><span class="dn">D' + pad(x.n) + '</span><span class="tt">' + fmt(x.title) + '</span><span class="st">' + (p.done ? "완료" : answered(x.n) ? answered(x.n) + "/" + total(x.n) : "") + (sc != null && p.done ? " · " + sc + "/" + total(x.n) : "") + "</span></button>";
+      });
+    });
+    return h;
+  }
+  function viewFormulas() {
+    var h = '<div class="back"><button class="btn sm" data-act="close-formulas">← 목록</button></div><h2 class="dtitle">공식 요약</h2><p class="hint">시험 전에 계속 훑어볼 한 장짜리 공식 모음입니다.</p><section class="panel">';
+    FSUM.forEach(function (f) { h += '<div class="fs"><div class="k">' + fmt(f.k) + '</div><div class="v">' + fmt(f.v) + "</div></div>"; });
+    return h + "</section>";
+  }
+  function practiceItem(n, i) {
+    var D = DAYS[n - 1], it = D.practice[i], key = n + "-" + i, res = (prog(n).pr || {})[i], open = shown[key] || res !== undefined;
+    var h = '<div class="pq"><div class="q">' + (i + 1) + ") " + fmt(it.q) + "</div>";
+    if (!open) return h + '<div class="mk"><button class="btn sm" data-act="show" data-k="' + key + '">정답 보기</button></div></div>';
+    h += '<div class="ans"><span class="lbl">정답·풀이</span>' + fmt(it.a) + "</div>" +
+      '<div class="mk"><span class="sub">내 풀이는?</span><button type="button" class="btn sm o" data-act="pr" data-day="' + n + '" data-i="' + i + '" data-v="1" aria-pressed="' + (res === 1) + '">맞았어요</button>' +
+      '<button type="button" class="btn sm x" data-act="pr" data-day="' + n + '" data-i="' + i + '" data-v="0" aria-pressed="' + (res === 0) + '">틀렸어요</button></div>';
+    if (res === 0) {
+      var ex = wrongBySrc("d" + n + "-" + i);
+      if (ex) {
+        h += '<div class="tp"><span>오답 노트에 담았어요. 유형:</span>' + Object.keys(TYPES).map(function (k) { return '<button type="button" data-act="wtype" data-id="' + ex.id + '" data-v="' + k + '" aria-pressed="' + (ex.type === k) + '">' + k + " " + TYPE_SHORT[k] + "</button>"; }).join("") + "</div>";
+      }
+    }
+    return h + "</div>";
+  }
+  function viewDay(n) {
+    var D = DAYS[n - 1], p = prog(n), pd = planDate(n), sc = score(n), tot = total(n), manual = !answered(n);
+    var h = '<div class="back"><button class="btn sm" data-act="close-day">← 목록</button><span class="sub mono">' +
+      (n > 1 ? '<button class="btn sm" data-act="open-day" data-day="' + (n - 1) + '">이전</button> ' : "") +
+      (n < N ? '<button class="btn sm" data-act="open-day" data-day="' + (n + 1) + '">다음</button>' : "") + "</span></div>";
+    h += '<h2 class="dtitle">Day ' + n + " · " + fmt(D.title) + '</h2><div class="sub">Week ' + D.week + " · " + esc(plain(WEEKS[D.week - 1].name)) + (pd ? " · 예정일 " + md(pd) : "") + "</div>";
+    h += '<div class="sec">핵심 개념</div><ul class="concept">' + D.concept.map(function (c) { return "<li>" + fmt(c) + "</li>"; }).join("") + "</ul>";
+    if (D.table) {
+      h += '<div class="scroll" style="margin-top:10px"><table><thead><tr>' + D.table.head.map(function (x) { return "<th>" + fmt(x) + "</th>"; }).join("") + "</tr></thead><tbody>" +
+        D.table.rows.map(function (r) { return "<tr>" + r.map(function (c) { return "<td>" + fmt(c) + "</td>"; }).join("") + "</tr>"; }).join("") + "</tbody></table></div>";
+    }
+    if (D.formulas && D.formulas.length) h += '<div class="sec">공식</div>' + D.formulas.map(function (f) { return '<div class="formula">' + fmt(f) + "</div>"; }).join("");
+    if (D.example && D.example.length) h += '<div class="sec">예제</div><div class="example">' + D.example.map(function (e) { return "<div>" + fmt(e) + "</div>"; }).join("") + "</div>";
+    h += '<div class="sec">연습문제 (' + tot + '문항)</div><p class="hint">직접 풀어 본 뒤 정답을 확인하세요. 틀렸어요를 누르면 오답 노트에 자동으로 담기고, 3일 뒤·7일 뒤 재풀이 일정이 잡혀요.</p>';
+    for (var i = 0; i < tot; i++) h += practiceItem(n, i);
+    h += '<section class="panel" style="margin-top:16px"><h2>오늘 공부 기록</h2><div class="row">' +
+      '<label class="f">학습일<input type="date" data-f="date" data-day="' + n + '" value="' + esc(p.date || "") + '"></label>' +
+      '<label class="f">학습 시간(분)<input type="number" min="0" max="600" inputmode="numeric" data-f="minutes" data-day="' + n + '" value="' + esc(p.minutes == null ? "" : p.minutes) + '" placeholder="90"></label>' +
+      '<div class="f">맞은 개수' + (manual ? '<span class="of"><input type="number" min="0" max="' + tot + '" inputmode="numeric" data-f="score" data-day="' + n + '" value="' + esc(p.score == null ? "" : p.score) + '"><span>/ ' + tot + "</span></span>" : '<b class="mono" style="font-size:18px;color:var(--ink)">' + (sc == null ? 0 : sc) + " / " + tot + '</b>') + "</div>" +
+      '<div class="f">이해도 (1~5)' + ratePick("und", p.und || 0, 'data-day="' + n + '"') + "</div></div>" +
+      '<label class="f" style="margin-top:10px">메모<input type="text" data-f="memo" data-day="' + n + '" value="' + esc(p.memo || "") + '" placeholder="막힌 부분이나 다시 볼 공식"></label>' +
+      '<div class="act"><button class="btn ' + (p.done ? "" : "pri") + '" data-act="done" data-day="' + n + '">' + (p.done ? "완료 취소" : "Day " + n + " 완료 기록") + "</button></div></section>";
+    return h;
+  }
+
+  function dayRow(d) {
+    var p = prog(d), pd = planDate(d), sc = score(d);
+    return '<div class="day' + (p.done ? " done" : "") + '"><div class="dh"><input class="ck" type="checkbox" data-act="done-ck" data-day="' + d + '"' + (p.done ? " checked" : "") + ' aria-label="Day ' + d + ' 완료">' +
+      '<span class="dn">D' + pad(d) + '</span><span class="tt">' + fmt(topic(d)) + "</span>" + (pd ? '<span class="plan">' + md(pd) + "</span>" : "") + "</div>" +
+      '<div class="df"><label class="f">학습일<input type="date" data-f="date" data-day="' + d + '" value="' + esc(p.date || "") + '"></label>' +
+      '<label class="f">시간(분)<input type="number" min="0" max="600" inputmode="numeric" data-f="minutes" data-day="' + d + '" value="' + esc(p.minutes == null ? "" : p.minutes) + '"></label>' +
+      '<label class="f">맞은 개수<span class="of"><input type="number" min="0" max="' + total(d) + '" inputmode="numeric" data-f="score" data-day="' + d + '" value="' + esc(sc == null ? "" : sc) + '"><span>/ ' + total(d) + "</span></span></label>" +
+      '<div class="f">이해도' + ratePick("und", p.und || 0, 'data-day="' + d + '"') + "</div>" +
+      '<label class="f memo">메모<input type="text" data-f="memo" data-day="' + d + '" value="' + esc(p.memo || "") + '"></label></div></div>';
+  }
+  function accountPanel() {
+    var h = '<section class="panel"><h2>계정 · 동기화</h2>', s = sync.state;
+    if (s === "off") h += '<p class="hint" style="margin:0">동기화 설정 전이에요. 기록은 이 기기에만 저장됩니다. 아래 백업 파일로 옮기거나 보관할 수 있어요.</p>';
+    else if (s === "loading") h += '<p class="hint" style="margin:0">동기화 서비스를 불러오는 중이에요.</p>';
+    else if (s === "unavailable") h += '<p class="hint" style="margin:0">' + esc(sync.msg || "지금은 동기화에 연결할 수 없어요. 인터넷에 연결되면 다시 시도합니다.") + "</p>";
+    else if (s === "signedout") {
+      h += '<p class="hint">로그인하면 이 기기의 기록이 계정에 올라가고, 다른 기기에서도 같은 기록이 보여요.</p><div class="row two"><label class="f">이메일<input type="email" id="em" autocomplete="username"></label><label class="f">비밀번호 (6자 이상)<input type="password" id="pw" autocomplete="current-password"></label></div>' +
+        '<div class="act"><button class="btn pri" data-act="login">로그인</button><button class="btn" data-act="signup">새로 가입</button><button class="btn sm" data-act="reset">비밀번호 재설정</button></div>' + (sync.msg ? '<p class="hint" style="margin:8px 0 0;color:var(--bad)">' + esc(sync.msg) + "</p>" : "");
+    } else {
+      h += '<p class="hint" style="margin:0 0 8px">' + esc(sync.user && sync.user.email || "") + " 계정으로 " + (s === "syncing" ? "동기화 중이에요." : "동기화되고 있어요.") + '</p><div class="act" style="margin-top:0"><button class="btn" data-act="logout">로그아웃</button></div>' + (sync.msg ? '<p class="hint" style="margin:8px 0 0">' + esc(sync.msg) + "</p>" : "");
+    }
+    return h + "</section>";
+  }
+  function backupPanel() {
+    var last = cfg().lastBackup, h = '<section class="panel"><h2>백업 · 복원</h2><p class="hint">기록은 이 기기의 브라우저에 저장됩니다. 브라우저 데이터를 지우거나 기기를 바꾸기 전에 백업 파일을 내려받으세요.' + (last ? " 마지막 백업: " + last : " 아직 백업한 적이 없어요.") + "</p>" +
+      '<div class="act" style="margin-top:0"><button class="btn pri" data-act="export">백업 파일 내려받기</button><label class="btn" style="cursor:pointer">백업 파일 불러오기<input type="file" id="imp" accept="application/json,.json" hidden></label></div>';
+    if (importPrev) h += '<div class="ans" style="margin-top:10px">' + importPrev.count + "개 기록을 찾았어요. 같은 항목은 불러온 내용으로 덮어씁니다.<div class=\"act\"><button class=\"btn pri sm\" data-act=\"import-ok\">불러오기</button><button class=\"btn sm\" data-act=\"import-cancel\">취소</button></div></div>";
+    return h + "</section>";
+  }
+  function viewProgress() {
+    var c = cfg(), h = '<section class="panel"><div id="sum">' + summaryHtml() + "</div></section>";
+    h += '<section class="panel"><h2>일정</h2><div class="row two"><label class="f">시작일<input type="date" data-f="cfg" data-k="start" value="' + esc(c.start || "") + '"></label>' +
+      '<label class="f">목표 시험일<input type="date" data-f="cfg" data-k="exam" value="' + esc(c.exam || "") + '"></label></div>' +
+      '<p class="hint" style="margin:8px 0 0">시작일을 넣으면 Day 별 예정일이 표시됩니다. 6일 공부하고 하루는 점검하는 계산입니다.</p></section>';
+    WEEKS.forEach(function (wkk, wi) {
+      var mins = 0, dn = 0, ds = DAYS.filter(function (x) { return x.week === wi + 1; });
+      ds.forEach(function (x) { var p = prog(x.n); mins += +p.minutes || 0; if (p.done) dn++; });
+      h += '<div class="wkhead"><h2>Week ' + (wi + 1) + " · " + esc(plain(wkk.name)) + '</h2><span class="sub mono">' + dn + "/" + ds.length + "일 · " + mins + "분</span></div>";
+      ds.forEach(function (x) { h += dayRow(x.n); });
+      var ck = get("c" + (wi + 1)) || {}, chk = ck.checks || {};
+      h += '<section class="panel"><h3>Week ' + (wi + 1) + " 점검 (일요일)</h3>" + (wkk.check || []).map(function (t, i) {
+        return '<label class="chk"><input class="ck" type="checkbox" data-act="wchk" data-w="' + (wi + 1) + '" data-i="' + i + '"' + (chk[i] ? " checked" : "") + "><span>" + fmt(t) + "</span></label>";
+      }).join("") + "</section>";
+    });
+    return h + accountPanel() + backupPanel();
+  }
+
+  function wrongCard(w, compact) {
+    var dd = due(w), g = grad(w);
+    function ox(n) {
+      var v = w["r" + n], dt = addDays(w.created, n === 1 ? 3 : 7);
+      return '<div><span class="lbl">재풀이 ' + n + " · " + md(dt) + '</span><span class="ox"><button type="button" class="o" data-act="rt" data-id="' + w.id + '" data-n="' + n + '" data-v="1" aria-pressed="' + (v === true) + '">O</button>' +
+        '<button type="button" class="x" data-act="rt" data-id="' + w.id + '" data-n="' + n + '" data-v="0" aria-pressed="' + (v === false) + '">X</button></span>' + (dd.indexOf(n) >= 0 ? '<span class="tag hl">오늘</span>' : "") + "</div>";
+    }
+    var repeat = w.r1 === false || w.r2 === false;
+    return '<article class="w' + (g ? " grad" : "") + '"><div class="wh"><span class="tag">Day ' + w.day + '</span><span class="tag">' + esc(w.type) + " " + esc(TYPES[w.type]) + '</span><span class="sub mono">' + md(w.created) + "</span>" +
+      (g ? '<span class="tag good">졸업</span>' : "") + (repeat && !g ? '<span class="tag bad">반복 오답</span>' : "") + "</div>" +
+      '<div class="q">' + fmt(w.q) + "</div>" +
+      (compact ? '<dl class="qa"><div><dt>정답</dt><dd>' + fmt(w.ans || "–") + "</dd></div></dl>" : '<dl class="qa"><div><dt>내 답</dt><dd>' + esc(w.mine || "–") + "</dd></div><div><dt>정답</dt><dd>" + fmt(w.ans || "–") + "</dd></div>" +
+        '<div style="grid-column:1/-1"><dt>틀린 이유 · 올바른 풀이 요점</dt><dd>' + esc(w.why || "–") + "</dd></div></dl>") +
+      '<div class="rt">' + ox(1) + ox(2) + "</div>" +
+      (compact ? "" : '<div class="act"><button class="btn sm" data-act="edit" data-id="' + w.id + '">수정</button><button class="btn sm warn" data-act="del" data-id="' + w.id + '">' + (delArm === w.id ? "한 번 더 눌러 삭제" : "삭제") + "</button></div>") + "</article>";
+  }
+  function viewWrong() {
+    var h = "", ed = editId ? get(editId) : null;
+    if (ed && !wd._ed) wd = { day: String(ed.day), type: ed.type, q: ed.q || "", mine: ed.mine || "", ans: ed.ans || "", why: ed.why || "", _ed: 1 };
+    var dayOpts = '<option value="">선택</option>' + DAYS.map(function (x) { return '<option value="' + x.n + '"' + (String(wd.day) === String(x.n) ? " selected" : "") + ">Day " + x.n + " · " + esc(plain(x.title)) + "</option>"; }).join("");
+    var typeOpts = Object.keys(TYPES).map(function (k) { return '<option value="' + k + '"' + (wd.type === k ? " selected" : "") + ">" + k + " " + TYPES[k] + "</option>"; }).join("");
+    h += '<section class="panel" id="wf"><h2>' + (ed ? "오답 수정" : "오답 직접 추가") + "</h2>" +
+      '<div class="row two"><label class="f">Day<select data-w="day">' + dayOpts + '</select></label><label class="f">오류 유형<select data-w="type">' + typeOpts + '</select></label></div>' +
+      '<label class="f" style="margin-top:10px">문제 (요약)<input type="text" data-w="q" value="' + esc(wd.q) + '" placeholder="예: 6 Ω 과 3 Ω 병렬에 12 V 를 가할 때 전체 전류"></label>' +
+      '<div class="row two" style="margin-top:10px"><label class="f">내 답<input type="text" data-w="mine" value="' + esc(wd.mine) + '"></label><label class="f">정답<input type="text" data-w="ans" value="' + esc(wd.ans) + '"></label></div>' +
+      '<label class="f" style="margin-top:10px">틀린 이유 · 올바른 풀이 요점<textarea data-w="why">' + esc(wd.why) + "</textarea></label>" +
+      '<div class="act"><button class="btn pri" data-act="wsave">' + (ed ? "수정 저장" : "오답 저장") + "</button>" + (ed ? '<button class="btn" data-act="wcancel">취소</button>' : "") + "</div></section>";
+    var all = wrongs();
+    var weekOpts = '<option value="all">전체 주차</option>' + [1, 2, 3, 4].map(function (n) { return '<option value="' + n + '"' + (String(filt.week) === String(n) ? " selected" : "") + ">Week " + n + "</option>"; }).join("");
+    var typeF = '<option value="all">전체 유형</option>' + Object.keys(TYPES).map(function (k) { return '<option value="' + k + '"' + (filt.type === k ? " selected" : "") + ">" + k + " " + TYPES[k] + "</option>"; }).join("");
+    var stF = [["open", "미졸업"], ["due", "오늘 재풀이"], ["grad", "졸업"], ["all", "전체"]].map(function (s) { return '<option value="' + s[0] + '"' + (filt.status === s[0] ? " selected" : "") + ">" + s[1] + "</option>"; }).join("");
+    var list = all.filter(function (w) {
+      if (filt.week !== "all" && String(wkOf(w.day)) !== String(filt.week)) return false;
+      if (filt.type !== "all" && w.type !== filt.type) return false;
+      if (filt.status === "open") return !grad(w);
+      if (filt.status === "grad") return grad(w);
+      if (filt.status === "due") return !grad(w) && due(w).length > 0;
+      return true;
+    }).sort(function (a, b) { return (due(b).length - due(a).length) || (a.created < b.created ? 1 : -1); });
+    h += '<section class="panel"><h2>오답 목록 <span class="mono sub">' + list.length + " / " + all.length + '</span></h2><div class="filters"><select data-fl="week" aria-label="주차">' + weekOpts + '</select><select data-fl="type" aria-label="유형">' + typeF + '</select><select data-fl="status" aria-label="상태">' + stF + "</select></div>";
+    if (!all.length) h += '<div class="empty">아직 오답이 없어요. 교재의 연습문제에서 "틀렸어요"를 누르면 자동으로 담깁니다.</div>';
+    else if (!list.length) h += '<div class="empty">조건에 맞는 오답이 없어요.</div>';
+    list.forEach(function (w) { h += wrongCard(w, false); });
+    return h + "</section>";
+  }
+
+  function viewStats() {
+    var ws = wrongs(), h = "";
+    h += '<section class="panel"><h2>주차별 현황</h2><div class="scroll"><table><thead><tr><th>주차</th><th class="n">완료</th><th class="n">시간(분)</th><th class="n">평균 이해도</th><th class="n">맞은 비율</th><th class="n">오답</th></tr></thead><tbody>';
+    [1, 2, 3, 4].forEach(function (w) {
+      var ds = DAYS.filter(function (x) { return x.week === w; }), dn = 0, mins = 0, us = [], sc = 0, tt = 0;
+      ds.forEach(function (x) { var p = prog(x.n), s = score(x.n); if (p.done) dn++; mins += +p.minutes || 0; if (p.und) us.push(+p.und); if (s != null) { sc += s; tt += total(x.n); } });
+      var wn = ws.filter(function (x) { return wkOf(x.day) === w; }).length;
+      h += "<tr><td>Week " + w + " · " + esc(plain(WEEKS[w - 1].name)) + '</td><td class="n">' + dn + "/" + ds.length + '</td><td class="n">' + mins + '</td><td class="n">' + (us.length ? (us.reduce(function (a, b) { return a + b; }, 0) / us.length).toFixed(1) : "–") + '</td><td class="n">' + (tt ? Math.round(sc / tt * 100) + "%" : "–") + '</td><td class="n">' + wn + "</td></tr>";
+    });
+    h += "</tbody></table></div></section>";
+    var typeTot = {}, mx = 0;
+    Object.keys(TYPES).forEach(function (k) { typeTot[k] = ws.filter(function (x) { return x.type === k; }).length; mx = Math.max(mx, typeTot[k]); });
+    h += '<section class="panel"><h2>오류 유형 집계</h2><div class="scroll"><table><thead><tr><th>유형</th><th class="n">W1</th><th class="n">W2</th><th class="n">W3</th><th class="n">W4</th><th class="n">합계</th><th style="width:30%"></th></tr></thead><tbody>';
+    Object.keys(TYPES).forEach(function (k) {
+      h += "<tr><td>" + k + " " + TYPES[k] + "</td>";
+      [1, 2, 3, 4].forEach(function (w) { h += '<td class="n">' + ws.filter(function (x) { return x.type === k && wkOf(x.day) === w; }).length + "</td>"; });
+      h += '<td class="n">' + typeTot[k] + '</td><td><div class="bar"><i style="width:' + (mx ? typeTot[k] / mx * 100 : 0) + '%"></i></div></td></tr>';
+    });
+    h += "</tbody></table></div>";
+    var top = Object.keys(TYPES).sort(function (a, b) { return typeTot[b] - typeTot[a]; })[0];
+    if (mx) h += '<p class="hint" style="margin:10px 0 0">가장 많은 유형은 ' + top + " " + TYPES[top] + "입니다. " + ({ A: "개념을 소리 내어 설명해 보고 예제부터 다시 풀어 보세요.", B: "공식 요약을 매일 훑고, 공식을 보지 않고 써 보세요.", C: "풀이 과정을 끝까지 적고 마지막에 검산하세요.", D: "문제를 읽고 구하는 값에 밑줄을 긋는 습관을 들이세요.", E: "계산 전에 단위부터 변환하세요." })[top] + "</p>";
+    h += "</section>";
+    var weak = DAYS.filter(function (x) {
+      var p = prog(x.n); if (!p.done) return false;
+      var sc = score(x.n), low = p.und && p.und <= 3, miss = sc != null && sc / total(x.n) < 0.7;
+      var wn = ws.filter(function (w) { return w.day === x.n && !grad(w); }).length;
+      return low || miss || wn >= 2;
+    });
+    h += '<section class="panel"><h2>복습 추천</h2><p class="hint">이해도 3 이하, 맞은 비율 70% 미만, 또는 미졸업 오답이 2개 이상인 날입니다.</p>';
+    if (!weak.length) h += '<div class="empty">지금은 복습 추천이 없어요.</div>';
+    else h += '<ul class="plain">' + weak.map(function (x) {
+      var p = prog(x.n), sc = score(x.n), why = [];
+      if (p.und && p.und <= 3) why.push("이해도 " + p.und);
+      if (sc != null && sc / total(x.n) < 0.7) why.push("맞은 개수 " + sc + "/" + total(x.n));
+      var wn = ws.filter(function (w) { return w.day === x.n && !grad(w); }).length; if (wn >= 2) why.push("미졸업 오답 " + wn);
+      return '<li><b>Day ' + x.n + "</b> " + fmt(x.title) + ' <span class="sub">(' + why.join(", ") + ")</span></li>";
+    }).join("") + "</ul>";
+    h += "</section>";
+    var t24 = score(N);
+    h += '<section class="panel"><h2>종합 점검 (Day ' + N + ')</h2><p class="hint" style="margin:0">' +
+      (t24 != null ? "점수 " + t24 + " / " + total(N) + " · " + (t24 >= 10 ? "12월 본과정으로 바로 진행해도 좋아요." : t24 >= 7 ? "틀린 Day 만 복습한 뒤 진행하세요." : "해당 Week 를 한 번 더 돌린 뒤 진행하는 것을 권해요.") : "Day " + N + " 를 마치면 점수와 다음 단계 판단이 여기에 표시됩니다.") + "</p></section>";
+    return h + reportPanel();
+  }
+
+  /* ---------- render ---------- */
+  function editing() { var a = document.activeElement; return !!(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && $("#view").contains(a)); }
+  var pending = false;
+  function render(force) {
+    if (!force && editing()) { pending = true; return; }
+    pending = false;
+    var open = wrongs().filter(function (w) { return !grad(w); }).length;
+    var tabs = [["today", "오늘"], ["study", "교재"], ["progress", "진도"], ["wrong", "오답"], ["stats", "통계"]];
+    $("#tabs").innerHTML = tabs.map(function (t) { return '<button role="tab" data-tab="' + t[0] + '" aria-selected="' + (tab === t[0]) + '">' + t[1] + (t[0] === "wrong" && open ? '<span class="n">' + open + "</span>" : "") + "</button>"; }).join("");
+    var v;
+    try {
+      v = tab === "today" ? viewToday() : tab === "study" ? (showFormulas ? viewFormulas() : studyDay ? viewDay(studyDay) : viewStudyList()) : tab === "progress" ? viewProgress() : tab === "wrong" ? viewWrong() : viewStats();
+    } catch (err) { v = '<section class="panel"><h2>화면을 그리지 못했어요</h2><p class="hint">' + esc(err && err.message) + "</p></section>"; }
+    $("#view").innerHTML = v;
+    var m = $("#mode"), st = sync.state;
+    m.className = "chip" + (st === "synced" ? " ok" : "");
+    m.lastChild.textContent = st === "synced" ? "동기화됨" : st === "syncing" ? "동기화 중" : st === "signedout" ? "이 기기에만 저장 · 로그인 가능" : "이 기기에 저장됨";
+    var c = cfg(), sub = "기초 복구편 · " + N + "일 · 하루 90분";
+    if (c.exam) { var dd = dayDiff(today(), c.exam); sub += dd >= 0 ? " · 시험 D-" + dd : " · 시험일 지남"; }
+    $("#sub").textContent = sub;
+  }
+  function refreshSummary() { var s = $("#sum"); if (s) s.innerHTML = summaryHtml(); }
+  function go(t) { tab = t; outText = ""; render(true); window.scrollTo(0, 0); }
+  document.addEventListener("focusout", function () { setTimeout(function () { if (pending && !editing()) render(true); }, 0); });
+
+  /* ---------- events ---------- */
+  document.addEventListener("input", function (e) { var t = e.target; if (t.dataset.w) wd[t.dataset.w] = t.value; });
+  document.addEventListener("change", function (e) {
+    var t = e.target, d = +t.dataset.day;
+    if (t.id === "imp") { readImport(t.files && t.files[0]); t.value = ""; return; }
+    if (t.dataset.w) wd[t.dataset.w] = t.value;
+    if (t.dataset.fl) { filt[t.dataset.fl] = t.value; render(true); return; }
+    var f = t.dataset.f;
+    if (f) {
+      if (f === "cfg") { var o = {}; o[t.dataset.k] = t.value; putCfg(o); render(true); return; }
+      var val = t.value;
+      if (f === "minutes" || f === "score") {
+        val = val === "" ? null : Math.max(0, Math.min(f === "score" ? total(d) : 600, Math.round(+val)));
+        t.value = val == null ? "" : val;
+      }
+      var patch = {}; patch[f] = val; putProg(d, patch); refreshSummary(); return;
+    }
+    if (t.dataset.act === "done-ck") { putProg(d, { done: t.checked, date: prog(d).date || (t.checked ? today() : "") }); render(true); }
+    if (t.dataset.act === "wchk") {
+      var key = "c" + t.dataset.w, cur = get(key) || {}, ch = Object.assign({}, cur.checks || {}); ch[t.dataset.i] = t.checked; put(key, { checks: ch });
+    }
+  });
+  document.addEventListener("click", function (e) {
+    var tb = e.target.closest("[data-tab]");
+    if (tb) { if (tab === tb.dataset.tab && tab === "study") { studyDay = null; showFormulas = false; } tab = tb.dataset.tab; outText = ""; render(true); window.scrollTo(0, 0); return; }
+    var b = e.target.closest("[data-act]");
+    if (!b || b.type === "checkbox") return;
+    var act = b.dataset.act, d = +b.dataset.day, id = b.dataset.id;
+    if (act === "open-day") { tab = "study"; studyDay = d; showFormulas = false; render(true); window.scrollTo(0, 0); }
+    else if (act === "close-day") { studyDay = null; render(true); window.scrollTo(0, 0); }
+    else if (act === "open-formulas") { showFormulas = true; render(true); window.scrollTo(0, 0); }
+    else if (act === "close-formulas") { showFormulas = false; render(true); window.scrollTo(0, 0); }
+    else if (act === "show") { shown[b.dataset.k] = true; render(true); }
+    else if (act === "pr") { markPractice(d, +b.dataset.i, +b.dataset.v); render(true); }
+    else if (act === "wtype") { var w = get(id); if (w) { put(id, Object.assign({}, w, { type: b.dataset.v })); render(true); } }
+    else if (act === "und") { putProg(d, { und: prog(d).und === +b.dataset.v ? 0 : +b.dataset.v }); render(true); }
+    else if (act === "done") {
+      var p = prog(d), nowDone = !p.done;
+      putProg(d, { done: nowDone, date: p.date || (nowDone ? today() : ""), minutes: p.minutes == null && nowDone ? 90 : p.minutes });
+      toast(nowDone ? "Day " + d + " 완료를 기록했어요." : "완료를 취소했어요."); render(true);
+      if (nowDone && d < N) { toast("Day " + d + " 완료! 다음은 Day " + (d + 1) + "예요."); }
+    }
+    else if (act === "wsave") {
+      if (!wd.day) { toast("Day 를 선택해 주세요."); return; }
+      if (!wd.q.trim()) { toast("문제 요약을 적어 주세요."); return; }
+      var exists = !!(editId && get(editId));
+      var base = Object.assign({ created: today(), r1: null, r2: null }, exists ? get(editId) : {});
+      var nid = exists ? editId : "w" + uid();
+      put(nid, Object.assign({}, base, { day: +wd.day, type: wd.type, q: wd.q.trim(), mine: wd.mine.trim(), ans: wd.ans.trim(), why: wd.why.trim() }));
+      var was = exists; editId = null; wd = { day: wd.day, type: wd.type, q: "", mine: "", ans: "", why: "" };
+      toast(was ? "오답을 수정했어요." : "오답을 저장했어요. 3일 뒤와 7일 뒤에 재풀이가 표시됩니다."); render(true);
+    }
+    else if (act === "wcancel") { editId = null; wd = { day: "", type: "C", q: "", mine: "", ans: "", why: "" }; render(true); }
+    else if (act === "edit") { editId = id; wd = { day: "", type: "C", q: "", mine: "", ans: "", why: "" }; render(true); var f = $("#wf"); if (f) f.scrollIntoView({ block: "start" }); }
+    else if (act === "del") {
+      if (delArm === id) { del(id); delArm = null; toast("삭제했어요."); } else { delArm = id; clearTimeout(window.__da); window.__da = setTimeout(function () { delArm = null; render(); }, 3000); }
+      render(true);
+    }
+    else if (act === "rt") {
+      var ww = get(id); if (!ww) return;
+      var key = "r" + b.dataset.n, v = b.dataset.v === "1", o2 = {}; o2[key] = ww[key] === v ? null : v;
+      put(id, Object.assign({ created: today(), r1: null, r2: null }, ww, o2)); render(true);
+    }
+    else if (act === "report") {
+      outText = buildReport(); render(true);
+      var ta = $("#out"); if (ta) { ta.focus(); ta.select(); }
+      try { navigator.clipboard.writeText(outText).then(function () { toast("복사했어요. Claude 채팅에 붙여넣으세요."); }, function () { toast("아래 내용을 선택해서 복사하세요."); }); } catch (err) { toast("아래 내용을 선택해서 복사하세요."); }
+    }
+    else if (act === "install") { var ev = window.__installEvt; if (ev) { ev.prompt(); window.__installEvt = null; render(true); } }
+    else if (act === "install-dismiss") { try { localStorage.setItem("jgisa-install-dismissed", "1"); } catch (err) { } render(true); }
+    else if (act === "goto-account") { go("progress"); setTimeout(function () { var em = $("#em"); if (em) em.scrollIntoView({ block: "center" }); }, 0); }
+    else if (act === "export") { doExport(); }
+    else if (act === "import-ok") { doImport(); }
+    else if (act === "import-cancel") { importPrev = null; render(true); }
+    else if (act === "login" || act === "signup" || act === "reset") { doAuth(act); }
+    else if (act === "logout") { if (auth) auth.signOut(); }
+  });
+
+  /* ---------- backup / auth actions ---------- */
+  function doExport() {
+    var payload = { app: "jgisa", version: 2, exported: today(), docs: docs };
+    try {
+      var blob = new Blob([JSON.stringify(payload, null, 1)], { type: "application/json" });
+      var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "jgisa-backup-" + today() + ".json";
+      document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+      putCfg({ lastBackup: today() }); toast("백업 파일을 내려받았어요."); render(true);
+    } catch (e) { toast("백업 파일을 만들지 못했어요."); }
+  }
+  function readImport(file) {
+    if (!file) return;
+    var r = new FileReader();
+    r.onload = function () {
+      try {
+        var j = JSON.parse(r.result), src = j && j.docs ? j.docs : j, out = {}, n = 0;
+        Object.keys(src || {}).forEach(function (k) {
+          if (!/^(cfg|d\d\d|c\d|w[a-z0-9]{3,})$/.test(k)) return;
+          var v = src[k]; if (!v || typeof v !== "object" || Array.isArray(v)) return;
+          out[k] = v; n++;
+        });
+        if (!n) { toast("불러올 기록이 없는 파일이에요."); return; }
+        importPrev = { docs: out, count: n }; render(true);
+      } catch (e) { toast("백업 파일을 읽지 못했어요."); }
+    };
+    r.readAsText(file);
+  }
+  function doImport() {
+    if (!importPrev) return;
+    Object.keys(importPrev.docs).forEach(function (k) { put(k, importPrev.docs[k]); });
+    var n = importPrev.count; importPrev = null; toast(n + "개 기록을 불러왔어요."); render(true);
+  }
+  function doAuth(kind) {
+    var em = ($("#em") || {}).value || "", pw = ($("#pw") || {}).value || "";
+    if (!auth) return; sync.msg = "";
+    var p = kind === "login" ? auth.signInWithEmailAndPassword(em.trim(), pw) : kind === "signup" ? auth.createUserWithEmailAndPassword(em.trim(), pw) : auth.sendPasswordResetEmail(em.trim());
+    p.then(function () { if (kind === "reset") { toast("재설정 메일을 보냈어요."); } }).catch(function (e) { sync.msg = authErr(e); render(true); });
+  }
+
+  /* ---------- init ---------- */
+  window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); window.__installEvt = e; render(); });
+  load();
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) { }
+  render(true);
+  initSync();
+  if ("serviceWorker" in navigator) window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () { }); });
+})();
+</script>
+</body>
+</html>
