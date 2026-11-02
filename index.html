@@ -44,6 +44,7 @@
   .btn{flex:1;text-align:center;text-decoration:none;font-weight:800;font-size:14px;border-radius:10px;padding:10px;background:var(--brand);color:#fff}
   .btn.dl{flex:0 0 auto;background:transparent;color:var(--brand);border:1px solid var(--brand);padding:10px 12px}
   .upd{font-size:11px;color:var(--muted);margin-top:8px}
+  .stat{font-size:12px;color:var(--muted);font-weight:600;margin-top:8px}
   .kind{font-size:11.5px;color:var(--accent);font-weight:700;margin-top:8px}
   .empty{color:var(--muted);font-size:14px;padding:30px 0;text-align:center}
   /* ▼ 최신 프로그램 가로 줄 */
@@ -97,6 +98,36 @@
   var DATA=(window.PROGRAMS||[]).slice();
   var selectedCat=null; // null=선택 전, '__ALL__'=전체, 그 외=분류명
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  // ── 사용·다운로드 수 (helpcomkr.com 카운터 + 깃허브 릴리스 다운로드 수) ──
+  var CM_API='https://helpcomkr.com/wp-json/cm/v1/', COUNTS=null;
+  function num(n){return Number(n||0).toLocaleString('ko-KR');}
+  function stats(p){
+    if(!COUNTS) return '';
+    var hits=COUNTS.hits||{}, parts=[];
+    if(p.download){
+      var dl=COUNTS.downloads||{}, n=(dl.byUrl||{})[p.download];
+      var m=/\/download\/([^\/]+)\//.exec(p.download), tag=m?m[1].replace(/-v?[0-9][0-9.]*$/,''):'';
+      if(tag && (dl.byTag||{})[tag]!=null) n=dl.byTag[tag];   // 버전이 바뀌어도 합산
+      parts.push('⬇ 다운로드 '+num(n)+'회');
+    } else if(p.file){
+      parts.push('👀 사용 '+num(hits[p.file])+'회');
+      if(!/\/$/.test(p.file)) parts.push('⬇ 내려받기 '+num(hits['dl:'+p.file])+'회');
+    }
+    return parts.length?'<div class="stat">'+parts.join(' · ')+'</div>':'';
+  }
+  function sendHit(id){
+    try{
+      var d=new Date(), k='cmc:'+id+':'+d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+      try{ if(localStorage.getItem(k)) return; localStorage.setItem(k,'1'); }catch(e){}
+      var b=new URLSearchParams({id:id});
+      if(navigator.sendBeacon && navigator.sendBeacon(CM_API+'hit',b)) return;
+      fetch(CM_API+'hit',{method:'POST',body:b,mode:'no-cors',keepalive:true}).catch(function(){});
+    }catch(e){}
+  }
+  document.addEventListener('click',function(e){
+    var a=e.target.closest && e.target.closest('a[data-dl]');
+    if(a) sendHit('dl:'+a.getAttribute('data-dl'));
+  });
   function byNewest(a,b){return (b.updated||'').localeCompare(a.updated||'')||(a.name||'').localeCompare(b.name||'');}
 
   function card(p){
@@ -109,7 +140,7 @@
       kind='<div class="kind">💻 설치형 — 내려받아 컴퓨터에 설치해서 사용해요</div>';
     } else if(p.file){         // 웹 도구 — 브라우저에서 바로 실행
       actions='<a class="btn" href="'+esc(p.file)+'">열기 · 사용하기</a>'+
-              (/\/$/.test(p.file)?'':'<a class="btn dl" href="'+esc(p.file)+'" download title="파일 내려받기">⬇</a>');  // 폴더로 배포된 앱(주소가 / 로 끝남)은 내려받기 버튼 없음
+              (/\/$/.test(p.file)?'':'<a class="btn dl" href="'+esc(p.file)+'" download data-dl="'+esc(p.file)+'" title="파일 내려받기">⬇</a>');  // 폴더로 배포된 앱(주소가 / 로 끝남)은 내려받기 버튼 없음
     } else {
       actions='<span class="btn" style="background:var(--muted)">준비 중</span>';
     }
@@ -123,6 +154,7 @@
       (tags?'<div class="tags">'+tags+'</div>':'')+
       '<div class="row">'+actions+'</div>'+
       kind+
+      stats(p)+
       (p.updated?'<div class="upd">갱신 '+esc(p.updated)+'</div>':'')+
     '</div>';
   }
@@ -190,6 +222,12 @@
   renderMenu();
   renderList();
   document.getElementById('foot').textContent='등록된 도구 '+DATA.length+'개';
+
+  // 숫자를 불러와서 카드에 표시 (불러오지 못하면 숫자 없이 그대로 둡니다)
+  fetch(CM_API+'counts?t='+Math.floor(Date.now()/6e4),{credentials:'omit'})
+    .then(function(r){return r.ok?r.json():null;})
+    .then(function(c){ if(!c) return; COUNTS=c; renderLatest(); renderList(); })
+    .catch(function(){});
 </script>
 </body>
 </html>

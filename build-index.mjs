@@ -66,6 +66,7 @@ console.log(`programs.js 생성 완료 — 프로그램 ${items.length}개`);
      <!--SEO:auto--> ... <!--/SEO:auto-->       : 설명·공유 미리보기(og) 태그
      만든이: 컴매니저 (helpcomkr.com 링크)       : 페이지 맨 아래
      <!--ADS:auto--> ... <!--/ADS:auto-->       : 구글 애드센스 코드 (ADSENSE_CLIENT)
+     <!--COUNT:auto--> ... <!--/COUNT:auto-->   : 사용 수 카운터 (COUNTER_API)
    공유 이미지를 따로 쓰려면 PROGRAM 메타에  ogimage: 이미지주소  를 적으세요. */
 const SITE = 'https://tools.helpcomkr.com/';
 const HOME = 'https://helpcomkr.com/';
@@ -129,12 +130,29 @@ function withAds(html) {
   return i < 0 ? html : html.slice(0, i) + block + html.slice(i);
 }
 
+// 사용 수 카운터: 페이지를 열면 helpcomkr.com 카운터에 1회를 보냅니다 (같은 브라우저는 하루 1회).
+// 숫자는 워드프레스 WPCode 스니펫 "프로그램 사용·다운로드 카운터"가 저장합니다.
+const COUNTER_API = 'https://helpcomkr.com/wp-json/cm/v1/hit';
+function withCount(html, p) {
+  html = html.replace(/[ \t]*<!--COUNT:auto-->[\s\S]*?<!--\/COUNT:auto-->\n?/, '');
+  if (!COUNTER_API) return html;
+  const js = `(function(){try{if(!/helpcomkr\\.com$|github\\.io$/.test(location.hostname))return;` +
+    `var id=${JSON.stringify(p.file)},d=new Date(),k="cmc:"+id+":"+d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();` +
+    `try{if(localStorage.getItem(k))return;localStorage.setItem(k,"1")}catch(e){}` +
+    `var u=${JSON.stringify(COUNTER_API)},b=new URLSearchParams({id:id});` +
+    `if(navigator.sendBeacon&&navigator.sendBeacon(u,b))return;` +
+    `fetch(u,{method:"POST",body:b,mode:"no-cors",keepalive:true}).catch(function(){})}catch(e){}})();`;
+  const block = `<!--COUNT:auto--><script>${js}</script><!--/COUNT:auto-->\n`;
+  const i = html.indexOf('</head>');
+  return i < 0 ? html : html.slice(0, i) + block + html.slice(i);
+}
+
 let touched = 0;
 for (const p of items) {
   const target = p.file.endsWith('/') ? path.join(p.file, 'index.html') : p.file;
   if (!(await exists(target))) { console.warn('페이지 없음(건너뜀):', target); continue; }
   const before = await readFile(target, 'utf8');
-  const after = withAds(withCredit(await withSeo(before, p)));
+  const after = withCount(withAds(withCredit(await withSeo(before, p))), p);
   if (after !== before) { await writeFile(target, after, 'utf8'); touched++; }
 }
 console.log(`검색·공유 태그와 만든이 링크 점검 완료 — 수정한 페이지 ${touched}개`);
