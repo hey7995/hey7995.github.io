@@ -148,6 +148,15 @@ textarea.out{font-family:var(--f-mono);font-size:12px;min-height:160px;margin-to
 .concept li{margin-bottom:6px}
 .formula{background:var(--soft);border-left:3px solid var(--accent);padding:7px 12px;margin-bottom:4px;border-radius:0 6px 6px 0;font-family:var(--f-mono);font-size:13.5px;overflow-x:auto;white-space:nowrap}
 .example{background:var(--soft);border-left:3px solid var(--warn);padding:7px 12px;margin-bottom:4px;border-radius:0 6px 6px 0}
+.intro{background:var(--soft);border-left:3px solid var(--accent);padding:10px 14px;margin:12px 0 4px;border-radius:0 8px 8px 0;font-size:14.5px}
+.fnote{font-size:13px;color:var(--muted);margin:-1px 0 8px;padding-left:15px;line-height:1.5}
+.exq{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:var(--surface)}
+.steps{margin:8px 0 0;padding-left:22px;font-size:14px}
+.steps li{margin-bottom:5px;overflow-wrap:anywhere}
+.box{border-radius:8px;padding:10px 12px 10px 8px;margin-bottom:4px;font-size:14px}
+.warnbox{background:var(--soft);border-left:3px solid var(--bad)}
+.exambox{background:var(--soft);border-left:3px solid var(--good)}
+.box ul.plain li{margin-bottom:6px}
 .pq{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:var(--surface)}
 .ans{margin-top:8px;padding:8px 10px;background:var(--soft);border-radius:6px;font-size:14px;overflow-wrap:anywhere}
 .ans .lbl{font-size:12px;color:var(--muted);margin-right:6px}
@@ -227,6 +236,7 @@ sub,sup{line-height:0}
   var C = window.JGISA_CONTENT;
   if (!C || !C.days) { document.getElementById("view").innerHTML = '<section class="panel"><h2>교재를 불러오지 못했어요</h2><p class="hint">content.js 를 확인해 주세요.</p></section>'; return; }
   var DAYS = C.days, WEEKS = C.weeks, FSUM = C.formulaSummary || [];
+  DAYS.forEach(function (d, i) { d.i = i + 1; if (d.id == null) d.id = String(d.n); });
   var KEY = "jgisa-studylog-v2";
   var TYPES = { A: "개념 이해 부족", B: "공식 암기 실수", C: "계산 실수", D: "문제 읽기 실수", E: "단위·부호 실수" };
   var TYPE_SHORT = { A: "개념", B: "공식", C: "계산", D: "읽기", E: "단위" };
@@ -242,11 +252,13 @@ sub,sup{line-height:0}
   var addDays = function (s, n) { var p = s.split("-").map(Number); return ymd(new Date(p[0], p[1] - 1, p[2] + n)); };
   var md = function (s) { return s ? s.slice(5).replace("-", "/") : ""; };
   var dayDiff = function (a, b) { var x = a.split("-").map(Number), y = b.split("-").map(Number); return Math.round((new Date(y[0], y[1] - 1, y[2]) - new Date(x[0], x[1] - 1, x[2])) / 86400000); };
-  var pid = function (d) { return "d" + pad(d); };
+  var pid = function (d) { var x = DAYS[d - 1]; return "p-" + (x && x.id ? x.id : d); };
+  var idxOfId = function (id) { for (var i = 0; i < DAYS.length; i++) if (String(DAYS[i].id) === String(id)) return i + 1; return 0; };
+  var dayById = function (id) { var i = idxOfId(id); return i ? DAYS[i - 1] : null; };
   var uid = function () { return Date.now().toString(36) + Math.random().toString(36).slice(2, 5); };
   var topic = function (d) { return DAYS[d - 1].title; };
   var total = function (d) { return DAYS[d - 1].practice.length; };
-  var wkOf = function (d) { return DAYS[d - 1].week; };
+  var wkOf = function (id) { var x = dayById(id); return x ? x.week : 1; };
   var N = DAYS.length;
 
   /* ---------- storage (local first, optional cloud sync) ---------- */
@@ -257,7 +269,28 @@ sub,sup{line-height:0}
   var wd = { day: "", type: "C", q: "", mine: "", ans: "", why: "" };
   var sync = { state: "off", user: null, msg: "" };
 
-  function load() { try { var s = localStorage.getItem(KEY); docs = s ? JSON.parse(s) : {}; } catch (e) { docs = {}; } if (!docs || typeof docs !== "object") docs = {}; }
+  function load() {
+    try { var s = localStorage.getItem(KEY); docs = s ? JSON.parse(s) : {}; } catch (e) { docs = {}; }
+    if (!docs || typeof docs !== "object") docs = {};
+    migrate();
+  }
+  function migrate() {
+    var changed = false;
+    Object.keys(docs).forEach(function (k) {
+      var m = /^d(\d\d)$/.exec(k);
+      if (m) {
+        var n = parseInt(m[1], 10), x = DAYS[n - 1], nk = "p-" + (x && x.id ? x.id : n);
+        if (!docs[nk]) { docs[nk] = Object.assign({}, docs[k]); changed = true; }
+        delete docs[k]; changed = true;
+      }
+      if (/^w[a-z0-9]{3,}$/.test(k) && docs[k] && typeof docs[k].day === "number") {
+        var y = DAYS[docs[k].day - 1];
+        docs[k] = Object.assign({}, docs[k], { day: y && y.id ? y.id : String(docs[k].day) });
+        changed = true;
+      }
+    });
+    if (changed) save();
+  }
   function save() {
     try { localStorage.setItem(KEY, JSON.stringify(docs)); }
     catch (e) { if (!memOnly) { memOnly = true; toast("이 브라우저는 저장을 막고 있어요. 백업 파일을 자주 내려받아 주세요."); } }
@@ -279,7 +312,8 @@ sub,sup{line-height:0}
       if (!o.created) o.created = today();
       if (o.r1 === undefined) o.r1 = null;
       if (o.r2 === undefined) o.r2 = null;
-      o.day = Math.min(N, Math.max(1, +o.day || 1));
+      o.day = String(o.day == null ? "" : o.day);
+      if (!dayById(o.day)) o.day = DAYS[0].id;
       if (!TYPES[o.type]) o.type = "C";
       o.q = o.q || "(문제 없음)";
       return o;
@@ -367,7 +401,7 @@ sub,sup{line-height:0}
   }
   function summaryHtml() {
     var nd = nextDay(), done = 0, mins = 0, us = [];
-    DAYS.forEach(function (x) { var p = prog(x.n); if (p.done) done++; mins += +p.minutes || 0; if (p.und) us.push(+p.und); });
+    DAYS.forEach(function (x) { var p = prog(x.i); if (p.done) done++; mins += +p.minutes || 0; if (p.und) us.push(+p.und); });
     var avg = us.length ? (us.reduce(function (a, b) { return a + b; }, 0) / us.length).toFixed(1) : "–";
     var open = wrongs().filter(function (w) { return !grad(w); }).length;
     var strip = "";
@@ -376,7 +410,7 @@ sub,sup{line-height:0}
       for (var i = 1; i <= 6; i++) {
         var d = w * 6 + i; if (d > N) break;
         var p = prog(d);
-        cells += '<button type="button" class="seg' + (p.done ? " on l" + (p.und || 3) : "") + (nd === d ? " next" : "") + '" data-act="open-day" data-day="' + d + '" title="Day ' + d + " · " + esc(plain(topic(d))) + '" aria-label="Day ' + d + '"></button>';
+        cells += '<button type="button" class="seg' + (p.done ? " on l" + (p.und || 3) : "") + (nd === d ? " next" : "") + '" data-act="open-day" data-day="' + d + '" title="Day ' + esc(DAYS[d - 1].n) + " · " + esc(plain(topic(d))) + '" aria-label="Day ' + esc(DAYS[d - 1].n) + '"></button>';
       }
       strip += '<div class="wk" aria-label="Week ' + (w + 1) + '">' + cells + "</div>";
     }
@@ -389,14 +423,14 @@ sub,sup{line-height:0}
   }
   function buildReport() {
     var lines = ["[전기기사 기초복구편 점검 요청]"];
-    var done = DAYS.filter(function (x) { return prog(x.n).done; });
-    var mins = DAYS.reduce(function (s, x) { return s + (+prog(x.n).minutes || 0); }, 0);
+    var done = DAYS.filter(function (x) { return prog(x.i).done; });
+    var mins = DAYS.reduce(function (s, x) { return s + (+prog(x.i).minutes || 0); }, 0);
     lines.push("진행: " + done.length + "/" + N + "일 완료, 누적 " + mins + "분");
     if (done.length) {
       var last = done[done.length - 1].n, p = prog(last), sc = score(last);
-      lines.push("가장 최근: Day " + last + " (" + plain(topic(last)) + ")" + (p.date ? " " + p.date : "") + ", 이해도 " + (p.und || "-") + "/5, 맞은 개수 " + (sc == null ? "-" : sc) + "/" + total(last) + (p.memo ? ", 메모: " + p.memo : ""));
+      lines.push("가장 최근: Day " + DAYS[last - 1].n + " (" + plain(topic(last)) + ")" + (p.date ? " " + p.date : "") + ", 이해도 " + (p.und || "-") + "/5, 맞은 개수 " + (sc == null ? "-" : sc) + "/" + total(last) + (p.memo ? ", 메모: " + p.memo : ""));
     }
-    var weak = done.filter(function (x) { var p = prog(x.n), sc = score(x.n); return (p.und && p.und <= 3) || (sc != null && sc / total(x.n) < 0.7); }).map(function (x) { return "Day " + x.n; });
+    var weak = done.filter(function (x) { var p = prog(x.i), sc = score(x.i); return (p.und && p.und <= 3) || (sc != null && sc / total(x.i) < 0.7); }).map(function (x) { return "Day " + x.n; });
     if (weak.length) lines.push("복습이 필요한 날: " + weak.join(", "));
     var open = wrongs().filter(function (w) { return !grad(w); });
     lines.push("미졸업 오답 " + open.length + "개" + (open.length ? ":" : ""));
@@ -418,7 +452,7 @@ sub,sup{line-height:0}
     if (pr[i] === v) delete pr[i]; else pr[i] = v;
     putProg(n, { pr: pr });
     var src = "d" + n + "-" + i, ex = wrongBySrc(src), it = DAYS[n - 1].practice[i];
-    if (pr[i] === 0 && !ex) put("w" + uid(), { day: n, type: "C", q: it.q, mine: "", ans: it.a, why: "", created: today(), r1: null, r2: null, src: src });
+    if (pr[i] === 0 && !ex) put("w" + uid(), { day: DAYS[n - 1].id, type: "C", q: it.q, mine: "", ans: it.a, why: "", created: today(), r1: null, r2: null, src: src });
     if (pr[i] !== 0 && ex && untouched(ex)) del(ex.id);
   }
 
@@ -438,10 +472,10 @@ sub,sup{line-height:0}
     h += '<section class="panel"><div id="sum">' + summaryHtml() + "</div></section>";
     if (nd) {
       var pd = planDate(nd), D = DAYS[nd - 1], ans = answered(nd);
-      h += '<section class="panel"><h2>오늘 진도: Day ' + nd + " · " + fmt(D.title) + "</h2>" +
+      h += '<section class="panel"><h2>오늘 진도: Day ' + esc(D.n) + " · " + fmt(D.title) + "</h2>" +
         '<p class="hint">Week ' + D.week + " · " + esc(plain(WEEKS[D.week - 1].name)) + (pd ? " · 예정일 " + md(pd) : "") + (ans ? " · 연습문제 " + ans + "/" + total(nd) + " 풀이" : "") + "</p>" +
         '<ol class="min">' + PLAN90.map(function (p) { return "<li><b>" + p[0] + "</b>" + esc(p[1]) + "</li>"; }).join("") + "</ol>" +
-        '<div class="act"><button class="btn pri" data-act="open-day" data-day="' + nd + '">' + (ans ? "이어서 공부하기" : "Day " + nd + " 시작하기") + "</button></div></section>";
+        '<div class="act"><button class="btn pri" data-act="open-day" data-day="' + nd + '">' + (ans ? "이어서 공부하기" : "Day " + D.n + " 시작하기") + "</button></div></section>";
     } else {
       h += '<section class="panel"><h2>' + N + '일 과정을 모두 마쳤어요</h2><p class="hint">통계 탭에서 약한 영역을 확인하고, 12월 본과정 준비에 반영하세요.</p></section>';
     }
@@ -459,8 +493,8 @@ sub,sup{line-height:0}
     WEEKS.forEach(function (wkk, wi) {
       h += '<div class="wkhead"><h2>Week ' + (wi + 1) + " · " + esc(plain(wkk.name)) + "</h2></div>";
       DAYS.filter(function (x) { return x.week === wi + 1; }).forEach(function (x) {
-        var p = prog(x.n), sc = score(x.n);
-        h += '<button type="button" class="dl' + (p.done ? " done" : "") + (nd === x.n ? " next" : "") + '" data-act="open-day" data-day="' + x.n + '"><span class="dn">D' + pad(x.n) + '</span><span class="tt">' + fmt(x.title) + '</span><span class="st">' + (p.done ? "완료" : answered(x.n) ? answered(x.n) + "/" + total(x.n) : "") + (sc != null && p.done ? " · " + sc + "/" + total(x.n) : "") + "</span></button>";
+        var p = prog(x.i), sc = score(x.i);
+        h += '<button type="button" class="dl' + (p.done ? " done" : "") + (nd === x.i ? " next" : "") + '" data-act="open-day" data-day="' + x.i + '"><span class="dn">' + esc(x.n) + '</span><span class="tt">' + fmt(x.title) + '</span><span class="st">' + (p.done ? "완료" : answered(x.i) ? answered(x.i) + "/" + total(x.i) : "") + (sc != null && p.done ? " · " + sc + "/" + total(x.i) : "") + "</span></button>";
       });
     });
     return h;
@@ -488,6 +522,18 @@ sub,sup{line-height:0}
 
   /* ---------- figures (inline SVG, theme-aware) ---------- */
   var FIGS = {
+    complexplane: {
+      cap: "그림 1 · 복소평면. 가로축이 실수부, 세로축이 허수부입니다. z = 3 + j4 는 가로로 3, 세로로 4 만큼 간 자리예요. 원점에서 그 점까지의 거리가 크기 |z| 이고, 가로축과 이루는 각이 위상입니다. 전기에서는 가로축에 저항, 세로축에 리액턴스를 놓습니다.",
+      svg: '<svg viewBox="0 0 460 236" role="img" aria-label="복소평면에 표시한 3 더하기 j4"><path class="ax" d="M40 170 L250 170 M70 206 L70 40"/><text x="196" y="192" class="sm">실수부 (저항)</text><text x="70" y="32" text-anchor="middle" class="sm">허수부 (리액턴스)</text><path class="dsh" d="M160 170 L160 90 M70 90 L160 90"/><line class="sh" style="stroke:var(--warn);stroke-width:2.6" x1="70" y1="170" x2="155" y2="95"/><circle cx="160" cy="90" r="4.5" class="nd"/><path class="ar" d="M104 170 A34 34 0 0 0 94 146"/><text x="110" y="162" class="ca" style="font-size:13px">θ</text><text x="115" y="188" text-anchor="middle" class="cb">3</text><text x="62" y="134" text-anchor="end" class="ca">j4</text><text x="168" y="84" class="cc" style="font-size:14px">z = 3 + j4</text><text x="92" y="118" class="cc" style="font-size:13px">|z| = 5</text><text x="272" y="110" class="mono" style="font-size:14px">|z| = √(3² + 4²) = 5</text><text x="272" y="142" class="sm">가로 3 과 세로 4 를 직각으로</text><text x="272" y="162" class="sm">합친 길이가 5 입니다</text></svg>'
+    },
+    jrotate: {
+      cap: "그림 2 · j 를 곱하면 90° 돕니다. 1 에서 출발해 j 를 곱할 때마다 반시계로 90° 씩 움직여 j → −1 → −j 를 거쳐 네 번이면 제자리로 옵니다. j² = −1 은 90° 를 두 번 돌면 반대 방향이 된다는 뜻이에요. 이 회전이 복소수가 위상을 다루는 원리입니다.",
+      svg: '<svg viewBox="0 0 460 236" role="img" aria-label="j 를 곱하면 90도씩 회전한다"><path class="ax" d="M44 118 L216 118 M130 204 L130 32"/><circle cx="130" cy="118" r="62" class="rt" style="stroke-dasharray:4 5"/><line class="sh" style="stroke:var(--good);stroke-width:2.6" x1="130" y1="118" x2="192" y2="118"/><line class="sh" style="stroke:var(--accent);stroke-width:2.6" x1="130" y1="118" x2="130" y2="56"/><line class="sh" style="stroke:var(--muted);stroke-width:2" x1="130" y1="118" x2="68" y2="118"/><line class="sh" style="stroke:var(--muted);stroke-width:2" x1="130" y1="118" x2="130" y2="180"/><path class="ar" d="M168 100 A42 42 0 0 0 148 80"/><text x="176" y="84" class="ca" style="font-size:13px">×j</text><text x="198" y="112" class="cb" style="font-weight:700">1</text><text x="138" y="50" class="ca" style="font-weight:700">j</text><text x="60" y="112" text-anchor="end" class="sm">−1</text><text x="138" y="196" class="sm">−j</text><text x="262" y="78" class="mono">1 × j = j</text><text x="262" y="108" class="mono">j × j = −1</text><text x="262" y="138" class="mono">−1 × j = −j</text><text x="262" y="168" class="mono">−j × j = 1</text><text x="262" y="198" class="sm">네 번이면 제자리입니다</text></svg>'
+    },
+    conjugate: {
+      cap: "그림 3 · 켤레복소수는 허수부의 부호만 바꾼 것입니다. 복소평면에서 가로축을 거울삼아 아래로 뒤집은 자리예요. 두 수를 곱하면 허수부가 서로 지워져 a² + b² 이라는 실수만 남습니다. 나눗셈에서 분모를 실수로 만들 때 쓰는 성질입니다.",
+      svg: '<svg viewBox="0 0 460 236" role="img" aria-label="켤레복소수는 가로축 대칭"><path class="ax" d="M44 118 L240 118 M80 200 L80 36"/><path class="dsh" d="M170 118 L170 62 M170 118 L170 174"/><line class="sh" style="stroke:var(--warn);stroke-width:2.6" x1="80" y1="118" x2="165" y2="66"/><line class="sh" style="stroke:var(--accent);stroke-width:2.6" x1="80" y1="118" x2="165" y2="170"/><circle cx="170" cy="62" r="4.5" class="nd"/><circle cx="170" cy="174" r="4.5" class="nd"/><text x="178" y="58" class="cc" style="font-size:14px">z = 3 + j4</text><text x="178" y="180" class="ca" style="font-size:14px">z* = 3 − j4</text><text x="72" y="92" text-anchor="end" class="sm">j4</text><text x="72" y="152" text-anchor="end" class="sm">−j4</text><text x="125" y="136" text-anchor="middle" class="sm">3</text><text x="300" y="114" class="mono">z · z* = 3² + 4²</text><text x="300" y="144" class="mono">= 25 (실수)</text></svg>'
+    },
     radian: {
       cap: "그림 1 · 라디안은 각을 호의 길이로 재는 단위입니다. 반지름 r 과 길이가 같은 호가 만드는 각이 1 rad 이고, 약 57.3° 예요. 원 둘레가 2πr 이므로 한 바퀴는 2π rad 입니다.",
       svg: '<svg viewBox="0 0 460 236" role="img" aria-label="라디안의 정의: 반지름과 같은 길이의 호가 만드는 각"><circle cx="92" cy="124" r="54" class="rt"/><path class="cv" style="stroke-width:3.6" d="M146.0 124.0 A54 54 0 0 0 121.2 78.6"/><line class="sh" x1="92" y1="124" x2="146" y2="124"/><line class="sh" x1="92" y1="124" x2="121.2" y2="78.6"/><path class="ar" d="M114.0 124.0 A22 22 0 0 0 103.9 105.5"/><text x="118" y="116" class="ca" style="font-size:14px">θ</text><text x="119" y="141" text-anchor="middle" class="sm">r</text><text x="92" y="48" text-anchor="middle" class="ca" style="font-size:13.5px">호의 길이 = r</text><text x="212" y="76" class="sm">호의 길이가 r 이면 θ = 1 rad</text><text x="212" y="112" class="mono" style="font-size:14px">한 바퀴 = 2π rad = 360°</text><text x="212" y="144" class="mono" style="font-size:14px">반 바퀴 = π rad = 180°</text><text x="212" y="176" class="mono" style="font-size:14px">1 rad ≈ 57.3°</text><text x="212" y="208" class="sm">180° = π 를 기준으로 바꿉니다</text></svg>'
@@ -580,31 +626,45 @@ sub,sup{line-height:0}
     var h = '<div class="back"><button class="btn sm" data-act="close-day">← 목록</button><span class="sub mono">' +
       (n > 1 ? '<button class="btn sm" data-act="open-day" data-day="' + (n - 1) + '">이전</button> ' : "") +
       (n < N ? '<button class="btn sm" data-act="open-day" data-day="' + (n + 1) + '">다음</button>' : "") + "</span></div>";
-    h += '<h2 class="dtitle">Day ' + n + " · " + fmt(D.title) + '</h2><div class="sub">Week ' + D.week + " · " + esc(plain(WEEKS[D.week - 1].name)) + (pd ? " · 예정일 " + md(pd) : "") + "</div>";
+    h += '<h2 class="dtitle">Day ' + esc(D.n) + " · " + fmt(D.title) + '</h2><div class="sub">Week ' + D.week + " · " + esc(plain(WEEKS[D.week - 1].name)) + (pd ? " · 예정일 " + md(pd) : "") + "</div>";
+    if (D.intro) h += '<div class="intro">' + fmt(D.intro) + "</div>";
     h += '<div class="sec">핵심 개념</div><ul class="concept">' + D.concept.map(function (c) { return "<li>" + fmt(c) + "</li>"; }).join("") + "</ul>";
     h += figuresHtml(D);
     if (D.table) {
       h += '<div class="scroll" style="margin-top:10px"><table><thead><tr>' + D.table.head.map(function (x) { return "<th>" + fmt(x) + "</th>"; }).join("") + "</tr></thead><tbody>" +
         D.table.rows.map(function (r) { return "<tr>" + r.map(function (c) { return "<td>" + fmt(c) + "</td>"; }).join("") + "</tr>"; }).join("") + "</tbody></table></div>";
     }
-    if (D.formulas && D.formulas.length) h += '<div class="sec">공식</div>' + D.formulas.map(function (f) { return '<div class="formula">' + fmt(f) + "</div>"; }).join("");
-    if (D.example && D.example.length) h += '<div class="sec">예제</div><div class="example">' + D.example.map(function (e) { return "<div>" + fmt(e) + "</div>"; }).join("") + "</div>";
+    if (D.formulas && D.formulas.length) h += '<div class="sec">공식</div>' + D.formulas.map(function (f) {
+      if (typeof f === "string") return '<div class="formula">' + fmt(f) + "</div>";
+      return '<div class="formula">' + fmt(f.f) + "</div>" + (f.note ? '<div class="fnote">' + fmt(f.note) + "</div>" : "");
+    }).join("");
+    if (D.examples && D.examples.length) {
+      h += '<div class="sec">예제</div>' + D.examples.map(function (e, i) {
+        return '<div class="exq"><div class="q">예제 ' + (i + 1) + ". " + fmt(e.q) + "</div>" +
+          '<ol class="steps">' + (e.steps || []).map(function (t) { return "<li>" + fmt(t) + "</li>"; }).join("") + "</ol>" +
+          (e.note ? '<div class="fnote">' + fmt(e.note) + "</div>" : "") + "</div>";
+      }).join("");
+    } else if (D.example && D.example.length) {
+      h += '<div class="sec">예제</div><div class="example">' + D.example.map(function (e) { return "<div>" + fmt(e) + "</div>"; }).join("") + "</div>";
+    }
     h += '<div class="sec">연습문제 (' + tot + '문항)</div><p class="hint">직접 풀어 본 뒤 정답을 확인하세요. 틀렸어요를 누르면 오답 노트에 자동으로 담기고, 3일 뒤·7일 뒤 재풀이 일정이 잡혀요.</p>';
     for (var i = 0; i < tot; i++) h += practiceItem(n, i);
+    if (D.mistakes && D.mistakes.length) h += '<div class="sec">자주 하는 실수</div><div class="box warnbox"><ul class="plain">' + D.mistakes.map(function (t) { return "<li>" + fmt(t) + "</li>"; }).join("") + "</ul></div>";
+    if (D.exam && D.exam.length) h += '<div class="sec">시험에는 이렇게 나옵니다</div><div class="box exambox"><ul class="plain">' + D.exam.map(function (t) { return "<li>" + fmt(t) + "</li>"; }).join("") + "</ul></div>";
     h += '<section class="panel" style="margin-top:16px"><h2>오늘 공부 기록</h2><div class="row">' +
       '<label class="f">학습일<input type="date" data-f="date" data-day="' + n + '" value="' + esc(p.date || "") + '"></label>' +
       '<label class="f">학습 시간(분)<input type="number" min="0" max="600" inputmode="numeric" data-f="minutes" data-day="' + n + '" value="' + esc(p.minutes == null ? "" : p.minutes) + '" placeholder="90"></label>' +
       '<div class="f">맞은 개수' + (manual ? '<span class="of"><input type="number" min="0" max="' + tot + '" inputmode="numeric" data-f="score" data-day="' + n + '" value="' + esc(p.score == null ? "" : p.score) + '"><span>/ ' + tot + "</span></span>" : '<b class="mono" style="font-size:18px;color:var(--ink)">' + (sc == null ? 0 : sc) + " / " + tot + '</b>') + "</div>" +
       '<div class="f">이해도 (1~5)' + ratePick("und", p.und || 0, 'data-day="' + n + '"') + "</div></div>" +
       '<label class="f" style="margin-top:10px">메모<input type="text" data-f="memo" data-day="' + n + '" value="' + esc(p.memo || "") + '" placeholder="막힌 부분이나 다시 볼 공식"></label>' +
-      '<div class="act"><button class="btn ' + (p.done ? "" : "pri") + '" data-act="done" data-day="' + n + '">' + (p.done ? "완료 취소" : "Day " + n + " 완료 기록") + "</button></div></section>";
+      '<div class="act"><button class="btn ' + (p.done ? "" : "pri") + '" data-act="done" data-day="' + n + '">' + (p.done ? "완료 취소" : "Day " + esc(D.n) + " 완료 기록") + "</button></div></section>";
     return h;
   }
 
   function dayRow(d) {
     var p = prog(d), pd = planDate(d), sc = score(d);
     return '<div class="day' + (p.done ? " done" : "") + '"><div class="dh"><input class="ck" type="checkbox" data-act="done-ck" data-day="' + d + '"' + (p.done ? " checked" : "") + ' aria-label="Day ' + d + ' 완료">' +
-      '<span class="dn">D' + pad(d) + '</span><span class="tt">' + fmt(topic(d)) + "</span>" + (pd ? '<span class="plan">' + md(pd) + "</span>" : "") + "</div>" +
+      '<span class="dn">' + esc(DAYS[d - 1].n) + '</span><span class="tt">' + fmt(topic(d)) + "</span>" + (pd ? '<span class="plan">' + md(pd) + "</span>" : "") + "</div>" +
       '<div class="df"><label class="f">학습일<input type="date" data-f="date" data-day="' + d + '" value="' + esc(p.date || "") + '"></label>' +
       '<label class="f">시간(분)<input type="number" min="0" max="600" inputmode="numeric" data-f="minutes" data-day="' + d + '" value="' + esc(p.minutes == null ? "" : p.minutes) + '"></label>' +
       '<label class="f">맞은 개수<span class="of"><input type="number" min="0" max="' + total(d) + '" inputmode="numeric" data-f="score" data-day="' + d + '" value="' + esc(sc == null ? "" : sc) + '"><span>/ ' + total(d) + "</span></span></label>" +
@@ -637,9 +697,9 @@ sub,sup{line-height:0}
       '<p class="hint" style="margin:8px 0 0">시작일을 넣으면 Day 별 예정일이 표시됩니다. 6일 공부하고 하루는 점검하는 계산입니다.</p></section>';
     WEEKS.forEach(function (wkk, wi) {
       var mins = 0, dn = 0, ds = DAYS.filter(function (x) { return x.week === wi + 1; });
-      ds.forEach(function (x) { var p = prog(x.n); mins += +p.minutes || 0; if (p.done) dn++; });
+      ds.forEach(function (x) { var p = prog(x.i); mins += +p.minutes || 0; if (p.done) dn++; });
       h += '<div class="wkhead"><h2>Week ' + (wi + 1) + " · " + esc(plain(wkk.name)) + '</h2><span class="sub mono">' + dn + "/" + ds.length + "일 · " + mins + "분</span></div>";
-      ds.forEach(function (x) { h += dayRow(x.n); });
+      ds.forEach(function (x) { h += dayRow(x.i); });
       var ck = get("c" + (wi + 1)) || {}, chk = ck.checks || {};
       h += '<section class="panel"><h3>Week ' + (wi + 1) + " 점검 (일요일)</h3>" + (wkk.check || []).map(function (t, i) {
         return '<label class="chk"><input class="ck" type="checkbox" data-act="wchk" data-w="' + (wi + 1) + '" data-i="' + i + '"' + (chk[i] ? " checked" : "") + "><span>" + fmt(t) + "</span></label>";
@@ -656,7 +716,7 @@ sub,sup{line-height:0}
         '<button type="button" class="x" data-act="rt" data-id="' + w.id + '" data-n="' + n + '" data-v="0" aria-pressed="' + (v === false) + '">X</button></span>' + (dd.indexOf(n) >= 0 ? '<span class="tag hl">오늘</span>' : "") + "</div>";
     }
     var repeat = w.r1 === false || w.r2 === false;
-    return '<article class="w' + (g ? " grad" : "") + '"><div class="wh"><span class="tag">Day ' + w.day + '</span><span class="tag">' + esc(w.type) + " " + esc(TYPES[w.type]) + '</span><span class="sub mono">' + md(w.created) + "</span>" +
+    return '<article class="w' + (g ? " grad" : "") + '"><div class="wh"><span class="tag">Day ' + esc((dayById(w.day) || {}).n || w.day) + '</span><span class="tag">' + esc(w.type) + " " + esc(TYPES[w.type]) + '</span><span class="sub mono">' + md(w.created) + "</span>" +
       (g ? '<span class="tag good">졸업</span>' : "") + (repeat && !g ? '<span class="tag bad">반복 오답</span>' : "") + "</div>" +
       '<div class="q">' + fmt(w.q) + "</div>" +
       (compact ? '<dl class="qa"><div><dt>정답</dt><dd>' + fmt(w.ans || "–") + "</dd></div></dl>" : '<dl class="qa"><div><dt>내 답</dt><dd>' + esc(w.mine || "–") + "</dd></div><div><dt>정답</dt><dd>" + fmt(w.ans || "–") + "</dd></div>" +
@@ -667,7 +727,7 @@ sub,sup{line-height:0}
   function viewWrong() {
     var h = "", ed = editId ? get(editId) : null;
     if (ed && !wd._ed) wd = { day: String(ed.day), type: ed.type, q: ed.q || "", mine: ed.mine || "", ans: ed.ans || "", why: ed.why || "", _ed: 1 };
-    var dayOpts = '<option value="">선택</option>' + DAYS.map(function (x) { return '<option value="' + x.n + '"' + (String(wd.day) === String(x.n) ? " selected" : "") + ">Day " + x.n + " · " + esc(plain(x.title)) + "</option>"; }).join("");
+    var dayOpts = '<option value="">선택</option>' + DAYS.map(function (x) { return '<option value="' + esc(x.id) + '"' + (String(wd.day) === String(x.id) ? " selected" : "") + ">Day " + x.n + " · " + esc(plain(x.title)) + "</option>"; }).join("");
     var typeOpts = Object.keys(TYPES).map(function (k) { return '<option value="' + k + '"' + (wd.type === k ? " selected" : "") + ">" + k + " " + TYPES[k] + "</option>"; }).join("");
     h += '<section class="panel" id="wf"><h2>' + (ed ? "오답 수정" : "오답 직접 추가") + "</h2>" +
       '<div class="row two"><label class="f">Day<select data-w="day">' + dayOpts + '</select></label><label class="f">오류 유형<select data-w="type">' + typeOpts + '</select></label></div>' +
@@ -699,7 +759,7 @@ sub,sup{line-height:0}
     h += '<section class="panel"><h2>주차별 현황</h2><div class="scroll"><table><thead><tr><th>주차</th><th class="n">완료</th><th class="n">시간(분)</th><th class="n">평균 이해도</th><th class="n">맞은 비율</th><th class="n">오답</th></tr></thead><tbody>';
     [1, 2, 3, 4].forEach(function (w) {
       var ds = DAYS.filter(function (x) { return x.week === w; }), dn = 0, mins = 0, us = [], sc = 0, tt = 0;
-      ds.forEach(function (x) { var p = prog(x.n), s = score(x.n); if (p.done) dn++; mins += +p.minutes || 0; if (p.und) us.push(+p.und); if (s != null) { sc += s; tt += total(x.n); } });
+      ds.forEach(function (x) { var p = prog(x.i), s = score(x.i); if (p.done) dn++; mins += +p.minutes || 0; if (p.und) us.push(+p.und); if (s != null) { sc += s; tt += total(x.i); } });
       var wn = ws.filter(function (x) { return wkOf(x.day) === w; }).length;
       h += "<tr><td>Week " + w + " · " + esc(plain(WEEKS[w - 1].name)) + '</td><td class="n">' + dn + "/" + ds.length + '</td><td class="n">' + mins + '</td><td class="n">' + (us.length ? (us.reduce(function (a, b) { return a + b; }, 0) / us.length).toFixed(1) : "–") + '</td><td class="n">' + (tt ? Math.round(sc / tt * 100) + "%" : "–") + '</td><td class="n">' + wn + "</td></tr>";
     });
@@ -717,24 +777,24 @@ sub,sup{line-height:0}
     if (mx) h += '<p class="hint" style="margin:10px 0 0">가장 많은 유형은 ' + top + " " + TYPES[top] + "입니다. " + ({ A: "개념을 소리 내어 설명해 보고 예제부터 다시 풀어 보세요.", B: "공식 요약을 매일 훑고, 공식을 보지 않고 써 보세요.", C: "풀이 과정을 끝까지 적고 마지막에 검산하세요.", D: "문제를 읽고 구하는 값에 밑줄을 긋는 습관을 들이세요.", E: "계산 전에 단위부터 변환하세요." })[top] + "</p>";
     h += "</section>";
     var weak = DAYS.filter(function (x) {
-      var p = prog(x.n); if (!p.done) return false;
-      var sc = score(x.n), low = p.und && p.und <= 3, miss = sc != null && sc / total(x.n) < 0.7;
-      var wn = ws.filter(function (w) { return w.day === x.n && !grad(w); }).length;
+      var p = prog(x.i); if (!p.done) return false;
+      var sc = score(x.i), low = p.und && p.und <= 3, miss = sc != null && sc / total(x.i) < 0.7;
+      var wn = ws.filter(function (w) { return w.day === x.id && !grad(w); }).length;
       return low || miss || wn >= 2;
     });
     h += '<section class="panel"><h2>복습 추천</h2><p class="hint">이해도 3 이하, 맞은 비율 70% 미만, 또는 미졸업 오답이 2개 이상인 날입니다.</p>';
     if (!weak.length) h += '<div class="empty">지금은 복습 추천이 없어요.</div>';
     else h += '<ul class="plain">' + weak.map(function (x) {
-      var p = prog(x.n), sc = score(x.n), why = [];
+      var p = prog(x.i), sc = score(x.i), why = [];
       if (p.und && p.und <= 3) why.push("이해도 " + p.und);
-      if (sc != null && sc / total(x.n) < 0.7) why.push("맞은 개수 " + sc + "/" + total(x.n));
-      var wn = ws.filter(function (w) { return w.day === x.n && !grad(w); }).length; if (wn >= 2) why.push("미졸업 오답 " + wn);
-      return '<li><b>Day ' + x.n + "</b> " + fmt(x.title) + ' <span class="sub">(' + why.join(", ") + ")</span></li>";
+      if (sc != null && sc / total(x.i) < 0.7) why.push("맞은 개수 " + sc + "/" + total(x.i));
+      var wn = ws.filter(function (w) { return w.day === x.id && !grad(w); }).length; if (wn >= 2) why.push("미졸업 오답 " + wn);
+      return '<li><b>Day ' + esc(x.n) + "</b> " + fmt(x.title) + ' <span class="sub">(' + why.join(", ") + ")</span></li>";
     }).join("") + "</ul>";
     h += "</section>";
     var t24 = score(N);
-    h += '<section class="panel"><h2>종합 점검 (Day ' + N + ')</h2><p class="hint" style="margin:0">' +
-      (t24 != null ? "점수 " + t24 + " / " + total(N) + " · " + (t24 >= 10 ? "12월 본과정으로 바로 진행해도 좋아요." : t24 >= 7 ? "틀린 Day 만 복습한 뒤 진행하세요." : "해당 Week 를 한 번 더 돌린 뒤 진행하는 것을 권해요.") : "Day " + N + " 를 마치면 점수와 다음 단계 판단이 여기에 표시됩니다.") + "</p></section>";
+    h += '<section class="panel"><h2>종합 점검 (Day ' + esc(DAYS[N - 1].n) + ')</h2><p class="hint" style="margin:0">' +
+      (t24 != null ? "점수 " + t24 + " / " + total(N) + " · " + (t24 >= 10 ? "12월 본과정으로 바로 진행해도 좋아요." : t24 >= 7 ? "틀린 Day 만 복습한 뒤 진행하세요." : "해당 Week 를 한 번 더 돌린 뒤 진행하는 것을 권해요.") : "Day " + DAYS[N - 1].n + " 를 마치면 점수와 다음 단계 판단이 여기에 표시됩니다.") + "</p></section>";
     return h + reportPanel();
   }
 
@@ -802,8 +862,8 @@ sub,sup{line-height:0}
     else if (act === "done") {
       var p = prog(d), nowDone = !p.done;
       putProg(d, { done: nowDone, date: p.date || (nowDone ? today() : ""), minutes: p.minutes == null && nowDone ? 90 : p.minutes });
-      toast(nowDone ? "Day " + d + " 완료를 기록했어요." : "완료를 취소했어요."); render(true);
-      if (nowDone && d < N) { toast("Day " + d + " 완료! 다음은 Day " + (d + 1) + "예요."); }
+      toast(nowDone ? "Day " + DAYS[d - 1].n + " 완료를 기록했어요." : "완료를 취소했어요."); render(true);
+      if (nowDone && d < N) { toast("Day " + DAYS[d - 1].n + " 완료! 다음은 Day " + DAYS[d].n + " 예요."); }
     }
     else if (act === "wsave") {
       if (!wd.day) { toast("Day 를 선택해 주세요."); return; }
@@ -811,7 +871,7 @@ sub,sup{line-height:0}
       var exists = !!(editId && get(editId));
       var base = Object.assign({ created: today(), r1: null, r2: null }, exists ? get(editId) : {});
       var nid = exists ? editId : "w" + uid();
-      put(nid, Object.assign({}, base, { day: +wd.day, type: wd.type, q: wd.q.trim(), mine: wd.mine.trim(), ans: wd.ans.trim(), why: wd.why.trim() }));
+      put(nid, Object.assign({}, base, { day: String(wd.day), type: wd.type, q: wd.q.trim(), mine: wd.mine.trim(), ans: wd.ans.trim(), why: wd.why.trim() }));
       var was = exists; editId = null; wd = { day: wd.day, type: wd.type, q: "", mine: "", ans: "", why: "" };
       toast(was ? "오답을 수정했어요." : "오답을 저장했어요. 3일 뒤와 7일 뒤에 재풀이가 표시됩니다."); render(true);
     }
