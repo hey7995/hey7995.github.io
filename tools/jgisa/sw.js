@@ -1,6 +1,6 @@
 /* 전기기사 학습장 서비스 워커
    content.js나 index.html을 고쳐서 다시 올릴 때는 아래 CACHE 이름의 숫자를 올려 주세요. (예: v2) */
-const CACHE = 'jgisa-v2';
+const CACHE = 'jgisa-v3';
 const CORE = [
   './',
   './index.html',
