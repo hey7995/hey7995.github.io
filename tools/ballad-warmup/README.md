@@ -11,7 +11,7 @@
 
 각 구간의 ▶ 시연 듣기 버튼은 컴퓨터로 만든 합성음입니다. 사람 목소리가 아니라 숨의 양, 이어 부르기, 시작 방식의 차이를 들려주는 용도입니다.
 
-- 주소: https://hey7995.github.io/tools/ballad-warmup/
+- 주소: https://tools.helpcomkr.com/tools/ballad-warmup/
 - 아이폰: Safari로 열고 공유 버튼 → "홈 화면에 추가"
 - 안드로이드: Chrome으로 열고 메뉴 → "앱 설치"
 - 컴퓨터: Chrome 또는 Edge 주소창의 설치 아이콘

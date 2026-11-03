@@ -9,6 +9,7 @@ on:
     paths:
       - 'tools/**'
       - 'build-index.mjs'
+      - 'assets/**'
       - '.github/workflows/build-index.yml'
   workflow_dispatch:
 
@@ -31,17 +32,17 @@ jobs:
         with:
           node-version: '20'
 
-      - name: programs.js 다시 생성
+      - name: programs.js·사이트맵·검색 태그 다시 생성
         run: node build-index.mjs
 
       - name: 변경분 있으면 커밋
         run: |
-          if [ -n "$(git status --porcelain programs.js)" ]; then
+          if [ -n "$(git status --porcelain programs.js sitemap.xml tools)" ]; then
             git config user.name  "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add programs.js
-            git commit -m "auto: rebuild programs.js"
+            git add programs.js sitemap.xml tools
+            git commit -m "auto: rebuild programs.js, sitemap, SEO tags"
             git push
           else
-            echo "programs.js 변경 없음 — 커밋 생략"
+            echo "변경 없음 — 커밋 생략"
           fi

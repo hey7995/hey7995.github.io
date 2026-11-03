@@ -6,6 +6,17 @@
 <!-- ▼▼ 사이트 이름·소개를 여기서 바꾸세요 ▼▼ -->
 <title>생활에 도움이 되는 프로그램</title>
 <meta name="description" content="생활과 업무에 도움이 되는 프로그램 모음. 설치·회원가입 없이 링크로 바로 실행합니다. 프로그램마다 무료·유료(무료 체험)가 다르니 각 안내를 확인하세요.">
+<meta name="naver-site-verification" content="4e2168be1a1f858e70989e575b6c399f0bbe6a43">
+<meta name="naver-site-verification" content="595d0c2c40811e96bf401f7ac3691f4616aef387">
+<link rel="canonical" href="https://tools.helpcomkr.com/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="생활에 도움이 되는 프로그램">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:title" content="생활에 도움이 되는 프로그램 | 컴매니저">
+<meta property="og:description" content="설치·회원가입 없이 링크로 바로 실행하는 생활·업무 프로그램 모음. PDF 변환, 기초수급 자가진단, 전기기사 학습, 아바타 만들기 등.">
+<meta property="og:url" content="https://tools.helpcomkr.com/">
+<meta property="og:image" content="https://tools.helpcomkr.com/assets/og-default.png">
+<meta name="twitter:card" content="summary_large_image">
 <style>
   :root{--bg:#eef1f5;--card:#fff;--ink:#18202c;--muted:#5c6675;--line:#e2e7ee;--brand:#1f4f8f;--accent:#2f6f5b;--chip:#eef2f7;}
   @media (prefers-color-scheme:dark){:root{--bg:#0e1319;--card:#161d27;--ink:#e9edf3;--muted:#98a4b3;--line:#28313d;--chip:#1d2530;--brand:#5b9be8;}}
@@ -33,6 +44,7 @@
   .btn{flex:1;text-align:center;text-decoration:none;font-weight:800;font-size:14px;border-radius:10px;padding:10px;background:var(--brand);color:#fff}
   .btn.dl{flex:0 0 auto;background:transparent;color:var(--brand);border:1px solid var(--brand);padding:10px 12px}
   .upd{font-size:11px;color:var(--muted);margin-top:8px}
+  .stat{font-size:12px;color:var(--muted);font-weight:600;margin-top:8px}
   .kind{font-size:11.5px;color:var(--accent);font-weight:700;margin-top:8px}
   .empty{color:var(--muted);font-size:14px;padding:30px 0;text-align:center}
   /* ▼ 최신 프로그램 가로 줄 */
@@ -49,6 +61,7 @@
   footer b{color:var(--ink)}
   a.plain{color:var(--brand)}
 </style>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2029767844815756" crossorigin="anonymous"></script>
 </head>
 <body>
 <div class="wrap">
@@ -72,7 +85,7 @@
   <footer>
     <p>ℹ️ 프로그램마다 <b>이용조건(무료·유료)과 유의사항</b>이 다르니 각 프로그램의 안내를 확인하세요.</p>
     <!-- ▼ 만든이·연락·안내를 바꾸세요 ▼ -->
-    <p>만든이: <b>컴매니저</b></p>
+    <p>만든이: <a class="plain" href="https://helpcomkr.com/" target="_blank" rel="noopener"><b>컴매니저</b></a></p>
     <p>문의: 연락처 <a class="plain" href="tel:043-277-7995">043-277-7995</a> · 이메일 <a class="plain" href="mailto:hey7995@gmail.com">hey7995@gmail.com</a> · 카톡 ID <b>hey7995</b> · 블로그 <a class="plain" href="https://blog.naver.com/hey7995" target="_blank" rel="noopener">blog.naver.com/hey7995</a> · 홈페이지 <a class="plain" href="https://helpcomkr.com" target="_blank" rel="noopener">helpcomkr.com</a></p>
     <p class="upd" id="foot"></p>
   </footer>
@@ -85,6 +98,36 @@
   var DATA=(window.PROGRAMS||[]).slice();
   var selectedCat=null; // null=선택 전, '__ALL__'=전체, 그 외=분류명
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  // ── 사용·다운로드 수 (helpcomkr.com 카운터 + 깃허브 릴리스 다운로드 수) ──
+  var CM_API='https://helpcomkr.com/wp-json/cm/v1/', COUNTS=null;
+  function num(n){return Number(n||0).toLocaleString('ko-KR');}
+  function stats(p){
+    if(!COUNTS) return '';
+    var hits=COUNTS.hits||{}, parts=[];
+    if(p.download){
+      var dl=COUNTS.downloads||{}, n=(dl.byUrl||{})[p.download];
+      var m=/\/download\/([^\/]+)\//.exec(p.download), tag=m?m[1].replace(/-v?[0-9][0-9.]*$/,''):'';
+      if(tag && (dl.byTag||{})[tag]!=null) n=dl.byTag[tag];   // 버전이 바뀌어도 합산
+      parts.push('⬇ 다운로드 '+num(n)+'회');
+    } else if(p.file){
+      parts.push('👀 사용 '+num(hits[p.file])+'회');
+      if(!/\/$/.test(p.file)) parts.push('⬇ 내려받기 '+num(hits['dl:'+p.file])+'회');
+    }
+    return parts.length?'<div class="stat">'+parts.join(' · ')+'</div>':'';
+  }
+  function sendHit(id){
+    try{
+      var d=new Date(), k='cmc:'+id+':'+d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+      try{ if(localStorage.getItem(k)) return; localStorage.setItem(k,'1'); }catch(e){}
+      var b=new URLSearchParams({id:id});
+      if(navigator.sendBeacon && navigator.sendBeacon(CM_API+'hit',b)) return;
+      fetch(CM_API+'hit',{method:'POST',body:b,mode:'no-cors',keepalive:true}).catch(function(){});
+    }catch(e){}
+  }
+  document.addEventListener('click',function(e){
+    var a=e.target.closest && e.target.closest('a[data-dl]');
+    if(a) sendHit('dl:'+a.getAttribute('data-dl'));
+  });
   function byNewest(a,b){return (b.updated||'').localeCompare(a.updated||'')||(a.name||'').localeCompare(b.name||'');}
 
   function card(p){
@@ -97,7 +140,7 @@
       kind='<div class="kind">💻 설치형 — 내려받아 컴퓨터에 설치해서 사용해요</div>';
     } else if(p.file){         // 웹 도구 — 브라우저에서 바로 실행
       actions='<a class="btn" href="'+esc(p.file)+'">열기 · 사용하기</a>'+
-              (/\/$/.test(p.file)?'':'<a class="btn dl" href="'+esc(p.file)+'" download title="파일 내려받기">⬇</a>');  // 폴더로 배포된 앱(주소가 / 로 끝남)은 내려받기 버튼 없음
+              (/\/$/.test(p.file)?'':'<a class="btn dl" href="'+esc(p.file)+'" download data-dl="'+esc(p.file)+'" title="파일 내려받기">⬇</a>');  // 폴더로 배포된 앱(주소가 / 로 끝남)은 내려받기 버튼 없음
     } else {
       actions='<span class="btn" style="background:var(--muted)">준비 중</span>';
     }
@@ -111,6 +154,7 @@
       (tags?'<div class="tags">'+tags+'</div>':'')+
       '<div class="row">'+actions+'</div>'+
       kind+
+      stats(p)+
       (p.updated?'<div class="upd">갱신 '+esc(p.updated)+'</div>':'')+
     '</div>';
   }
@@ -178,6 +222,12 @@
   renderMenu();
   renderList();
   document.getElementById('foot').textContent='등록된 도구 '+DATA.length+'개';
+
+  // 숫자를 불러와서 카드에 표시 (불러오지 못하면 숫자 없이 그대로 둡니다)
+  fetch(CM_API+'counts?t='+Math.floor(Date.now()/6e4),{credentials:'omit'})
+    .then(function(r){return r.ok?r.json():null;})
+    .then(function(c){ if(!c) return; COUNTS=c; renderLatest(); renderList(); })
+    .catch(function(){});
 </script>
 </body>
 </html>

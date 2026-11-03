@@ -2,7 +2,7 @@
 
 전기기사 필기 대비 기초 복구 24일 교재를 읽고, 연습문제를 풀고, 진도와 오답 노트를 기록하는 설치형 웹앱(PWA)입니다.
 
-- 주소: https://hey7995.github.io/tools/jgisa/
+- 주소: https://tools.helpcomkr.com/tools/jgisa/
 - 아이폰: Safari로 열고 공유 버튼 → "홈 화면에 추가"
 - 안드로이드: Chrome으로 열고 메뉴 → "앱 설치"
 - 컴퓨터: Chrome 또는 Edge 주소창의 설치 아이콘
@@ -34,7 +34,7 @@
 로그인과 기기 간 동기화는 Firebase(Authentication + Firestore)를 씁니다. 무료 요금제로 충분합니다.
 
 1. https://console.firebase.google.com 에서 프로젝트를 만듭니다.
-2. Authentication → 시작하기 → 로그인 방법에서 "이메일/비밀번호"를 사용 설정합니다. 설정 → 승인된 도메인에 `hey7995.github.io` 를 추가합니다.
+2. Authentication → 시작하기 → 로그인 방법에서 "이메일/비밀번호"를 사용 설정합니다. 설정 → 승인된 도메인에 `tools.helpcomkr.com`(그리고 예전 주소 `hey7995.github.io`)를 추가합니다.
 3. Firestore Database → 데이터베이스 만들기(위치 `asia-northeast3` 서울, 프로덕션 모드).
 4. Firestore 의 "규칙" 탭에 아래를 붙여넣고 게시합니다. 본인 계정의 문서만 읽고 쓸 수 있습니다.
 
