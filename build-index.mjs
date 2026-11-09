@@ -73,7 +73,7 @@ const HOME = 'https://helpcomkr.com/';
 const SITE_NAME = '생활에 도움이 되는 프로그램';
 const DEFAULT_OG = SITE + 'assets/og-default.png';
 // 구글 애드센스 게시자 ID. 비워 두면('') 광고 코드를 넣지 않습니다.
-const ADSENSE_CLIENT = 'ca-pub-2029767844815756';
+const ADSENSE_CLIENT = '';  // 예: 'ca-pub-2029767844815756' (애드센스를 다시 쓸 때 채우기)
 const exists = p => access(p).then(() => true, () => false);
 const attr = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 const CREDIT_LINK = `만든이: <a href="${HOME}" target="_blank" rel="noopener" style="color:inherit"><b>컴매니저</b></a>`;
