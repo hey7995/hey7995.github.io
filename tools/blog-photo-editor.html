@@ -1074,7 +1074,8 @@ function hqScaled(im, w, h){
 function drawImageHQ(ctx, im, x, y, w, h){
   const prevE=ctx.imageSmoothingEnabled, prevQ=ctx.imageSmoothingQuality;
   ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
-  ctx.drawImage(hqScaled(im,w,h), x, y, w, h);
+  const t=ctx.getTransform(), sc=Math.hypot(t.a,t.b)||1;   // 축소 변환이 걸린 캔버스면 최종 화면 크기로 미리 줄임
+  ctx.drawImage(hqScaled(im,w*sc,h*sc), x, y, w, h);
   ctx.imageSmoothingEnabled=prevE; ctx.imageSmoothingQuality=prevQ;
 }
 function drawOverlay(ctx, o, W, H){
@@ -1790,12 +1791,20 @@ function drawTnTop(ctx,o){
   for(const ov of (o.overlays||[])) drawOverlay(ctx,ov,S,S);
 }
 function redrawTnPhoto(){ if(thumbPhotoCanvas) drawTnPhoto($('#tnPhotoCv').getContext('2d'), curThumb()); }
-function redrawTnTop(){ const c=$('#tnTopCv'), x=c.getContext('2d'); x.clearRect(0,0,1024,1024); drawTnTop(x, curThumb()); }
+// 미리보기 윗층(로고·스티커)은 화면 실제 크기로 직접 고품질로 그림 — 1024를 CSS로 줄이면 로고 글자가 깨져 보임(저장본은 1024 그대로)
+function redrawTnTop(){
+  const c=$('#tnTopCv'), s=(+$('#tnEl').dataset.s)||0.5, dpr=window.devicePixelRatio||1;
+  const px=Math.max(64, Math.min(1024, Math.round(1024*s*dpr)));
+  if(c.width!==px){ c.width=px; c.height=px; }
+  const x=c.getContext('2d'); x.setTransform(1,0,0,1,0,0); x.clearRect(0,0,px,px);
+  const k=px/1024; x.setTransform(k,0,0,k,0,0); drawTnTop(x, curThumb()); x.setTransform(1,0,0,1,0,0);
+}
 function renderThumbPreview(){ const o=curThumb(); $('#tnHtml').innerHTML=buildTn(o); renderBadgePreview(o); redrawTnPhoto(); redrawTnTop(); }
 function fitThumb(){
   const avail=Math.max(160, Math.min($('#tmStage').clientWidth-28, 560, innerWidth>900 ? innerHeight-150 : 9999));
-  const s=avail/1024; $('#tnEl').style.transform='scale('+s+')';
+  const s=avail/1024, old=$('#tnEl').dataset.s; $('#tnEl').style.transform='scale('+s+')'; $('#tnEl').dataset.s=s;
   $('#tmfit').style.width=(1024*s)+'px'; $('#tmfit').style.height=(1024*s)+'px';
+  if(old && +old!==s) redrawTnTop();
 }
 function syncThumbInputs(o){
   $('#tmRegion').value=o.region; $('#tmTitle').value=o.title; $('#tmBadge').value=o.badge; $('#tmIcon').value=o.icon;
