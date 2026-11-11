@@ -110,7 +110,6 @@
       parts.push('⬇ 다운로드 '+num(n)+'회');
     } else if(p.file){
       parts.push('👀 사용 '+num(hits[p.file])+'회');
-      if(!/\/$/.test(p.file)) parts.push('⬇ 내려받기 '+num(hits['dl:'+p.file])+'회');
     }
     return parts.length?'<div class="stat">'+parts.join(' · ')+'</div>':'';
   }
@@ -138,8 +137,7 @@
               (p.file?'<a class="btn dl" href="'+esc(p.file)+'" rel="noopener" title="자세히 보기">자세히</a>':'');
       kind='<div class="kind">💻 설치형 — 내려받아 컴퓨터에 설치해서 사용해요</div>';
     } else if(p.file){         // 웹 도구 — 브라우저에서 바로 실행
-      actions='<a class="btn" href="'+esc(p.file)+'">열기 · 사용하기</a>'+
-              (/\/$/.test(p.file)?'':'<a class="btn dl" href="'+esc(p.file)+'" download data-dl="'+esc(p.file)+'" title="파일 내려받기">⬇</a>');  // 폴더로 배포된 앱(주소가 / 로 끝남)은 내려받기 버튼 없음
+      actions='<a class="btn" href="'+esc(p.file)+'">열기 · 사용하기</a>';   // 웹 도구는 사이트에서만 사용(파일 내려받기 버튼 없음)
     } else {
       actions='<span class="btn" style="background:var(--muted)">준비 중</span>';
     }
