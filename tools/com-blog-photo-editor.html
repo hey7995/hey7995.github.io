@@ -484,7 +484,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         </div>
         <div class="grp">
           <h2>문구</h2>
-          <label class="fl">지역 키워드 (대괄호로 강조됨)</label>
+          <label class="fl">지역 키워드 <span class="sub">대괄호가 필요하면 직접 입력 (예: [○○동])</span></label>
           <input type="text" id="tmRegion" placeholder="예: 청주 봉명동">
           <label class="fl">제목 (엔터로 줄바꿈)</label>
           <textarea id="tmTitle" placeholder="예: 노트북 액정 교체"></textarea>
@@ -1633,7 +1633,7 @@ function applyFxPixels(ctx, fx){
   ctx.putImageData(im,0,0);
 }
 function tnSizes(region,title){
-  const kw = region.trim()!=='' ? '['+region.trim()+']' : '';
+  const kw = region.trim();   // 대괄호 자동 추가 없음(필요하면 직접 [○○동]처럼 입력)
   const kwLen=[...kw].length, kwPx = kwLen>16?72:(kwLen>12?84:100);
   const mlen=[...title.trim()].length, mainPx = mlen>34?64:(mlen>26?74:(mlen>18?82:89));
   return {kw,kwPx,mainPx};
